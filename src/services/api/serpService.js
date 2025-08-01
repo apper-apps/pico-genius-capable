@@ -1,5 +1,3 @@
-import React from "react";
-import Error from "@/components/ui/Error";
 // Real-time SERP data service using multiple API providers
 const serpService = {
   // Primary API endpoints - can be configured via environment
@@ -18,85 +16,83 @@ const serpService = {
 async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
     try {
       // Create AbortController for timeout handling
-      const controller = new AbortController()
-      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+      const controller = new AbortController();
+const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       try {
         // Use SerpAPI for real-time SERP data
-        const serpApiUrl = new URL(this.apiConfig.serpapi.baseUrl)
-        serpApiUrl.searchParams.append('q', keyword)
-        serpApiUrl.searchParams.append('api_key', this.apiConfig.serpapi.key)
-        serpApiUrl.searchParams.append('location', location)
-        serpApiUrl.searchParams.append('hl', language)
-        serpApiUrl.searchParams.append('num', '20')
+const serpApiUrl = new URL(this.apiConfig.serpapi.baseUrl);
+serpApiUrl.searchParams.append('q', keyword);
+        serpApiUrl.searchParams.append('api_key', this.apiConfig.serpapi.key);
+        serpApiUrl.searchParams.append('location', location);
+        serpApiUrl.searchParams.append('hl', language);
+        serpApiUrl.searchParams.append('num', '20');
 
         const response = await fetch(serpApiUrl.toString(), {
           signal: controller.signal,
           headers: {
             'Accept': 'application/json',
             'User-Agent': 'SEO-Genius/1.0'
-          }
-        })
+}
+        });
         
-        clearTimeout(timeoutId)
+        clearTimeout(timeoutId);
         
-        if (!response.ok) {
-          throw new Error(`SERP API error: ${response.status} - ${response.statusText}`)
+if (!response.ok) {
+          throw new Error(`SERP API error: ${response.status} - ${response.statusText}`);
         }
 
-        const data = await response.json()
+const data = await response.json();
         
-        return this.processSerpResults(data, keyword)
+        return this.processSerpResults(data, keyword);
       } catch (fetchError) {
-        clearTimeout(timeoutId)
-        throw fetchError
+        clearTimeout(timeoutId);
+        throw fetchError;
       }
-    } catch (error) {
-      console.error('SERP API Error:', error)
-      
+} catch (error) {
+      console.error('SERP API Error:', error);
       // Handle specific error types with better messaging
-      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        console.warn('CORS/Network error detected, falling back to mock data')
+if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        console.warn('CORS/Network error detected, falling back to mock data');
         // Fall back to mock data for development/demo purposes
-        return this.getFallbackSerpData(keyword)
+        return this.getFallbackSerpData(keyword);
       }
       
-      if (error.name === 'AbortError') {
-        throw new Error('Request timed out. The SERP API is taking too long to respond. Please try again.')
+if (error.name === 'AbortError') {
+        throw new Error('Request timed out. The SERP API is taking too long to respond. Please try again.');
       }
       
-      if (error.message.includes('CORS')) {
-        console.warn('CORS policy violation, using fallback data')
-        return this.getFallbackSerpData(keyword)
+if (error.message.includes('CORS')) {
+        console.warn('CORS policy violation, using fallback data');
+        return this.getFallbackSerpData(keyword);
       }
       
       // Handle API rate limiting
-      if (error.message.includes('429') || error.message.includes('rate limit')) {
-        throw new Error('API rate limit exceeded. Please wait a moment and try again.')
+if (error.message.includes('429') || error.message.includes('rate limit')) {
+        throw new Error('API rate limit exceeded. Please wait a moment and try again.');
       }
       
       // Handle authentication errors
-      if (error.message.includes('401') || error.message.includes('403')) {
-        throw new Error('API authentication failed. Please check your API configuration.')
+if (error.message.includes('401') || error.message.includes('403')) {
+        throw new Error('API authentication failed. Please check your API configuration.');
       }
       
-      // For development: fall back to mock data on any API error
-      if (process.env.NODE_ENV === 'development') {
-        console.warn('Development mode: falling back to mock data due to API error')
-        return this.getFallbackSerpData(keyword)
+// For development: fall back to mock data on any API error
+      if (import.meta.env.DEV) {
+        console.warn('Development mode: falling back to mock data due to API error');
+        return this.getFallbackSerpData(keyword);
       }
       
-      // Re-throw API errors with more context
 // Re-throw API errors with more context
-      throw new Error(`SERP API Error: ${error.message}. Using offline mode.`)
+      throw new Error(`SERP API Error: ${error.message}. Using offline mode.`);
     }
   },
 // Fallback method to provide mock SERP data
-  getFallbackSerpData(keyword) {
+  async getFallbackSerpData(keyword) {
     try {
       // Import mock data dynamically
-      const mockDataModule = await import('@/services/mockData/serpResults.json')
-      const mockData = mockDataModule.default
+      const mockDataModule = await import('@/services/mockData/serpResults.json');
+      const mockData = mockDataModule.default;
       
       // Customize mock data for the specific keyword
       const customizedResults = mockData.map((result, index) => ({
@@ -104,24 +100,23 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
         title: result.title.replace(/sample keyword/gi, keyword),
         snippet: result.snippet.replace(/sample keyword/gi, keyword),
         position: index + 1,
-        url: result.url || `https://example.com/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
+url: result.url || `https://example.com/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
         keyword: keyword
-      }))
+      }));
       
-      console.info(`Using fallback SERP data for keyword: ${keyword}`)
-      return customizedResults
-    } catch (mockError) {
-      console.error('Failed to load mock SERP data:', mockError)
+      console.info(`Using fallback SERP data for keyword: ${keyword}`);
+      return customizedResults;
+} catch (mockError) {
+      console.error('Failed to load mock SERP data:', mockError);
       
       // Ultimate fallback: generate basic SERP results
-// Ultimate fallback: generate basic SERP results
-      return this.generateBasicSerpResults(keyword)
+      return this.generateBasicSerpResults(keyword);
     }
   },
-
-  // Generate basic SERP results as last resort
-    const basicResults = []
-    const domains = ['wikipedia.org', 'example.com', 'guide.com', 'howto.com', 'best-practices.org']
+generateBasicSerpResults(keyword) {
+    // Generate basic SERP results as last resort
+    const basicResults = [];
+    const domains = ['wikipedia.org', 'example.com', 'guide.com', 'howto.com', 'best-practices.org'];
     
     for (let i = 0; i < 10; i++) {
       basicResults.push({
@@ -129,40 +124,40 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
         title: `${keyword} - Complete Guide ${i + 1}`,
         snippet: `Learn everything about ${keyword} with this comprehensive guide. Discover best practices, tips, and strategies for ${keyword} success.`,
         url: `https://${domains[i % domains.length]}/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
-        entities: [keyword, 'guide', 'tips', 'strategies'],
+entities: [keyword, 'guide', 'tips', 'strategies'],
         keyword: keyword
-      })
+      });
     }
     
-    console.info(`Generated basic SERP results for keyword: ${keyword}`)
-    return basicResults
+    console.info(`Generated basic SERP results for keyword: ${keyword}`);
+    return basicResults;
   },
 
-  async getAll() {
-// For backward compatibility - returns recent analysis results with better error handling
-    const recentKeywords = ['SEO tools', 'content marketing', 'keyword research']
-    const results = []
+async getAll() {
+    // For backward compatibility - returns recent analysis results with better error handling
+    const recentKeywords = ['SEO tools', 'content marketing', 'keyword research'];
+    const results = [];
     
     for (const keyword of recentKeywords) {
-      try {
-        const analysis = await this.getKeywordAnalysis(keyword)
-        results.push(...analysis.slice(0, 5)) // Limit results per keyword
+try {
+        const analysis = await this.getKeywordAnalysis(keyword);
+        results.push(...analysis.slice(0, 5)); // Limit results per keyword
       } catch (error) {
-        console.warn(`Failed to get analysis for ${keyword}:`, error)
+        console.warn(`Failed to get analysis for ${keyword}:`, error);
         // Continue with other keywords even if one fails
       }
     }
     
     // If no results obtained from API, return fallback data
-    if (results.length === 0) {
-      console.info('Using fallback SERP data due to API unavailability')
-      return this.getFallbackSerpData()
+if (results.length === 0) {
+      console.info('Using fallback SERP data due to API unavailability');
+      return this.getFallbackSerpData();
     }
     
-    return results
+    return results;
   },
 
-  // Fallback method to provide mock SERP data when API fails
+// Static fallback method to provide mock SERP data when API fails
   getFallbackSerpData() {
     return [
       {
@@ -193,19 +188,18 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
     try {
       const allResults = await this.getAll()
       const result = allResults.find(item => item.position === parseInt(position))
-      if (!result) {
-        throw new Error(`SERP result not found at position ${position}`)
+if (!result) {
+        throw new Error(`SERP result not found at position ${position}`);
       }
-return result
-    } catch (error) {
-      console.error('Error getting SERP result by position:', error)
-      throw new Error(`Failed to retrieve SERP result: ${error.message}`)
+      return result;
+} catch (error) {
+      console.error('Error getting SERP result by position:', error);
+      throw new Error(`Failed to retrieve SERP result: ${error.message}`);
     }
   },
 
-  processSerpResults(serpData, keyword) {
-    const results = []
-    
+processSerpResults(serpData, keyword) {
+    const results = [];
     if (serpData.organic_results) {
       serpData.organic_results.forEach((item, index) => {
         results.push({
@@ -222,10 +216,10 @@ return result
           metadata: {
             richSnippet: item.rich_snippet || null,
             sitelinks: item.sitelinks || [],
-            rating: item.rating || null
+rating: item.rating || null
           }
-        })
-      })
+        });
+      });
     }
 
     // Add related searches if available
@@ -241,20 +235,20 @@ return result
           difficulty: Math.floor(Math.random() * 40) + 30,
           ctr: 0,
           timestamp: new Date().toISOString(),
-          source: 'related_search'
-        })
-      })
+source: 'related_search'
+        });
+      });
     }
 
-    return results
+return results;
   },
 
-  generateFallbackResults(keyword) {
+generateFallbackResults(keyword) {
     // Generate basic results when API is unavailable
-    const results = []
+    const results = [];
     const competitors = [
-      'wikipedia.org', 'medium.com', 'hubspot.com', 'moz.com', 'searchengineland.com'
-    ]
+'wikipedia.org', 'medium.com', 'hubspot.com', 'moz.com', 'searchengineland.com'
+    ];
     
     competitors.forEach((domain, index) => {
       results.push({
@@ -267,71 +261,71 @@ return result
         difficulty: Math.floor(Math.random() * 60) + 20,
         ctr: this.calculateCTR(index + 1),
         timestamp: new Date().toISOString(),
-        source: 'fallback'
-      })
-    })
+source: 'fallback'
+      });
+    });
     
-    return results
+    return results;
   },
 
-  estimateSearchVolume(keyword) {
+estimateSearchVolume(keyword) {
     // Basic search volume estimation based on keyword characteristics
-    const wordCount = keyword.split(' ').length
-    const baseVolume = Math.max(100, Math.floor(Math.random() * 50000))
+    const wordCount = keyword.split(' ').length;
+    const baseVolume = Math.max(100, Math.floor(Math.random() * 50000));
     
-    // Longer keywords typically have lower volume
-    const volumeMultiplier = wordCount > 3 ? 0.3 : wordCount > 2 ? 0.6 : 1
+// Longer keywords typically have lower volume
+    const volumeMultiplier = wordCount > 3 ? 0.3 : wordCount > 2 ? 0.6 : 1;
     
-    return Math.floor(baseVolume * volumeMultiplier)
+    return Math.floor(baseVolume * volumeMultiplier);
   },
 
-  calculateDifficulty(totalResults, position) {
+calculateDifficulty(totalResults, position) {
     // Calculate keyword difficulty based on competition
-    const baseScore = Math.min(90, totalResults * 2)
-    const positionFactor = position < 3 ? 1.2 : position < 10 ? 1.0 : 0.8
+    const baseScore = Math.min(90, totalResults * 2);
+    const positionFactor = position < 3 ? 1.2 : position < 10 ? 1.0 : 0.8;
     
-    return Math.floor(baseScore * positionFactor)
+    return Math.floor(baseScore * positionFactor);
   },
 
-  calculateCTR(position) {
+calculateCTR(position) {
     // Industry standard CTR by position
     const ctrRates = {
       1: 31.7, 2: 24.7, 3: 18.7, 4: 13.7, 5: 9.5,
       6: 6.1, 7: 4.4, 8: 3.1, 9: 2.5, 10: 2.2
-    }
+    };
     
-    return ctrRates[position] || Math.max(0.5, 2.5 - (position * 0.1))
+    return ctrRates[position] || Math.max(0.5, 2.5 - (position * 0.1));
   },
 
-  async create(serpResult) {
+async create(serpResult) {
     // For adding custom SERP analysis results
     const newResult = {
       position: Date.now(), // Use timestamp as unique identifier
       ...serpResult,
       timestamp: new Date().toISOString(),
       source: 'custom'
-    }
+    };
     
-    return { ...newResult }
+    return { ...newResult };
   },
 
-  async update(position, updates) {
+async update(position, updates) {
     // Update existing SERP result
     return {
       position: parseInt(position),
       ...updates,
       lastUpdated: new Date().toISOString()
-    }
+    };
   },
 
-  async delete(position) {
+async delete(position) {
     // Mark result as deleted
     return {
       position: parseInt(position),
       deleted: true,
       deletedAt: new Date().toISOString()
-    }
+    };
   }
-}
+};
 
-export default serpService
+export default serpService;
