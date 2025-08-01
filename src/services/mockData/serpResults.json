@@ -1,0 +1,72 @@
+[
+  {
+    "position": 1,
+    "title": "Digital Marketing Services | Grow Your Business Online - MarketPro",
+    "url": "https://marketpro.com/digital-marketing-services",
+    "snippet": "Transform your business with our comprehensive digital marketing services. Expert SEO, PPC, content marketing, and social media management. Get a free consultation today.",
+    "entities": ["digital marketing", "SEO", "PPC", "content marketing", "social media"]
+  },
+  {
+    "position": 2,
+    "title": "Professional Digital Marketing Agency - Results-Driven Solutions",
+    "url": "https://digitalexperts.com/services",
+    "snippet": "Award-winning digital marketing agency specializing in data-driven strategies. Increase your online presence with our proven SEO, advertising, and content solutions.",
+    "entities": ["digital marketing agency", "data-driven", "online presence", "advertising"]
+  },
+  {
+    "position": 3,
+    "title": "Digital Marketing Services - Complete Online Marketing Solutions",
+    "url": "https://onlinemarketing.com/digital-services",
+    "snippet": "Complete digital marketing services including search engine optimization, pay-per-click advertising, social media marketing, and conversion optimization.",
+    "entities": ["search engine optimization", "pay-per-click", "social media marketing", "conversion optimization"]
+  },
+  {
+    "position": 4,
+    "title": "Best Digital Marketing Services 2024 | Top Rated Agency",
+    "url": "https://topdigital.com/marketing-services",
+    "snippet": "Top-rated digital marketing services helping businesses grow online. Custom strategies, transparent reporting, and proven results. Contact us for a free audit.",
+    "entities": ["top-rated", "custom strategies", "transparent reporting", "free audit"]
+  },
+  {
+    "position": 5,
+    "title": "Digital Marketing Company - Full Service Online Marketing",
+    "url": "https://fullservicemarketing.com",
+    "snippet": "Full-service digital marketing company offering SEO, content marketing, email marketing, and web design. Helping businesses succeed online since 2010.",
+    "entities": ["full-service", "email marketing", "web design", "online success"]
+  },
+  {
+    "position": 6,
+    "title": "Affordable Digital Marketing Services - Small Business Solutions",
+    "url": "https://affordablemarketing.com/services",
+    "snippet": "Affordable digital marketing services designed for small businesses. Get more leads and sales with our cost-effective SEO and advertising solutions.",
+    "entities": ["affordable", "small business", "more leads", "cost-effective"]
+  },
+  {
+    "position": 7,
+    "title": "Enterprise Digital Marketing Services - Scale Your Business",
+    "url": "https://enterprisemarketing.com/solutions",
+    "snippet": "Enterprise-level digital marketing services for large businesses. Advanced analytics, multi-channel campaigns, and dedicated account management.",
+    "entities": ["enterprise-level", "advanced analytics", "multi-channel", "account management"]
+  },
+  {
+    "position": 8,
+    "title": "Digital Marketing Consultant - Strategic Online Growth",
+    "url": "https://marketingconsultant.com/digital",
+    "snippet": "Expert digital marketing consultant helping businesses develop winning online strategies. Specializing in ROI-focused campaigns and growth optimization.",
+    "entities": ["marketing consultant", "winning strategies", "ROI-focused", "growth optimization"]
+  },
+  {
+    "position": 9,
+    "title": "Local Digital Marketing Services - Dominate Your Market",
+    "url": "https://localmarketing.com/digital-services",
+    "snippet": "Local digital marketing services helping businesses dominate their local market. Local SEO, Google My Business optimization, and location-based advertising.",
+    "entities": ["local digital marketing", "local SEO", "Google My Business", "location-based"]
+  },
+  {
+    "position": 10,
+    "title": "Digital Marketing Training & Services - Learn and Grow",
+    "url": "https://marketingtraining.com/services",
+    "snippet": "Digital marketing services combined with training programs. Learn while we help you grow your business with hands-on marketing strategies and education.",
+    "entities": ["marketing training", "training programs", "hands-on strategies", "education"]
+  }
+]

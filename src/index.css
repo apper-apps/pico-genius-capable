@@ -1,0 +1,254 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+@import 'react-toastify/dist/ReactToastify.css';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  color-scheme: dark;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background: #111827;
+}
+
+#root {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* Toast Customization */
+.Toastify__toast-container {
+  z-index: 9999;
+}
+
+.Toastify__toast {
+  background: #1f2937;
+  color: #f9fafb;
+  border-radius: 0.75rem;
+  border: 1px solid #374151;
+  font-size: 0.875rem;
+  min-height: 48px;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+.Toastify__toast--success {
+  border-left: 4px solid #10b981;
+}
+
+.Toastify__toast--error {
+  border-left: 4px solid #ef4444;
+}
+
+.Toastify__toast--info {
+  border-left: 4px solid #3b82f6;
+}
+
+.Toastify__toast--warning {
+  border-left: 4px solid #f59e0b;
+}
+
+.Toastify__progress-bar {
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  height: 2px;
+}
+
+.Toastify__close-button {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.Toastify__close-button:hover {
+  color: #f9fafb;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #4b5563;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Animation Classes */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+.animate-scale-in {
+  animation: scaleIn 0.2s ease-out;
+}
+
+/* Gradient Text */
+.gradient-text {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Gradient Border */
+.gradient-border {
+  position: relative;
+  background: linear-gradient(135deg, #6366f1, #8b5cf6);
+  border-radius: 0.75rem;
+  padding: 1px;
+}
+
+.gradient-border-content {
+  background: #1f2937;
+  border-radius: 0.6875rem;
+  width: 100%;
+  height: 100%;
+}
+
+/* Loading Skeleton */
+.skeleton {
+  background: linear-gradient(90deg, #374151 25%, #4b5563 50%, #374151 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Code Syntax Highlighting */
+.code-block {
+  background: #0f172a;
+  border: 1px solid #334155;
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-family: 'Fira Code', 'Consolas', 'Monaco', monospace;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-x: auto;
+}
+
+/* Focus States */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-gray-900;
+}
+
+/* Interactive States */
+.interactive {
+  @apply transition-all duration-200 ease-out;
+}
+
+.interactive:hover {
+  transform: scale(1.02);
+}
+
+.interactive:active {
+  transform: scale(0.98);
+}
+
+/* Card Styles */
+.card {
+  @apply bg-gray-800 border border-gray-700 rounded-xl shadow-card;
+}
+
+.card:hover {
+  @apply shadow-card-hover border-gray-600;
+}
+
+/* Button Styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-primary-500 to-purple-500 hover:from-primary-600 hover:to-purple-600 text-white font-medium px-6 py-3 rounded-lg transition-all duration-200 focus-ring interactive;
+}
+
+.btn-secondary {
+  @apply bg-gray-700 hover:bg-gray-600 text-white font-medium px-6 py-3 rounded-lg border border-gray-600 hover:border-gray-500 transition-all duration-200 focus-ring interactive;
+}
+
+.btn-ghost {
+  @apply text-gray-300 hover:text-white hover:bg-gray-700 font-medium px-4 py-2 rounded-lg transition-all duration-200 focus-ring;
+}
+
+/* Input Styles */
+.input {
+  @apply bg-gray-800 border border-gray-600 text-white placeholder-gray-400 rounded-lg px-4 py-3 focus:border-primary-500 focus:ring-1 focus:ring-primary-500 transition-colors duration-200;
+}
+
+.input:focus {
+  @apply shadow-glow-sm;
+}
+
+/* Badge Styles */
+.badge {
+  @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+}
+
+.badge-primary {
+  @apply bg-primary-100 text-primary-800;
+}
+
+.badge-secondary {
+  @apply bg-gray-100 text-gray-800;
+}
+
+.badge-success {
+  @apply bg-emerald-100 text-emerald-800;
+}
+
+.badge-warning {
+  @apply bg-yellow-100 text-yellow-800;
+}
+
+.badge-error {
+  @apply bg-red-100 text-red-800;
+}
+
+/* Dark mode badge variants */
+.dark .badge-primary {
+  @apply bg-primary-900 text-primary-200;
+}
+
+.dark .badge-secondary {
+  @apply bg-gray-700 text-gray-300;
+}
+
+.dark .badge-success {
+  @apply bg-emerald-900 text-emerald-200;
+}
+
+.dark .badge-warning {
+  @apply bg-yellow-900 text-yellow-200;
+}
+
+.dark .badge-error {
+  @apply bg-red-900 text-red-200;
+}

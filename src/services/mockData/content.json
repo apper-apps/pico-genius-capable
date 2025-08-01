@@ -1,0 +1,127 @@
+[
+  {
+    "Id": 1,
+    "keywordId": "1",
+    "type": "service",
+    "title": "Professional Digital Marketing Services for Growing Businesses",
+    "content": "Transform your business with our comprehensive digital marketing services. Our expert team delivers measurable results through strategic SEO, content marketing, and data-driven campaigns that drive real growth for your business.",
+    "entities": ["digital marketing", "SEO services", "content marketing", "PPC advertising", "social media marketing", "conversion optimization"],
+    "headings": ["Professional Digital Marketing Services", "Our Comprehensive Approach", "Proven Results", "Why Choose Our Services", "Get Started Today"],
+    "faqs": [
+      {
+        "question": "What digital marketing services do you offer?",
+        "answer": "We provide comprehensive digital marketing services including SEO, content marketing, PPC advertising, social media marketing, email marketing, and conversion rate optimization."
+      },
+      {
+        "question": "How long does it take to see results?",
+        "answer": "Most clients begin seeing improvements within 30-60 days, with significant results typically visible within 3-6 months depending on the strategy and competition."
+      },
+      {
+        "question": "Do you work with small businesses?",
+        "answer": "Yes, we work with businesses of all sizes and create customized strategies that fit your budget and goals."
+      }
+    ],
+    "score": 94,
+    "createdAt": "2024-01-15T10:30:00.000Z"
+  },
+  {
+    "Id": 2,
+    "keywordId": "2",
+    "type": "blog",
+    "title": "The Complete SEO Optimization Guide for 2024",
+    "content": "Master the art of SEO with our comprehensive guide covering everything from keyword research to technical optimization. Learn the latest strategies and best practices that will help your website rank higher in search results.",
+    "entities": ["SEO optimization", "keyword research", "on-page SEO", "technical SEO", "link building", "search rankings", "Google algorithm"],
+    "headings": ["Introduction to SEO", "Keyword Research Fundamentals", "On-Page Optimization", "Technical SEO", "Link Building Strategies", "Measuring Success"],
+    "faqs": [
+      {
+        "question": "What is SEO and why is it important?",
+        "answer": "SEO (Search Engine Optimization) is the practice of optimizing your website to rank higher in search engine results, driving more organic traffic to your site."
+      },
+      {
+        "question": "How often should I update my SEO strategy?",
+        "answer": "SEO strategies should be reviewed quarterly and updated based on algorithm changes, performance data, and evolving best practices."
+      },
+      {
+        "question": "Can I do SEO myself or should I hire professionals?",
+        "answer": "While basic SEO can be learned, complex optimization often requires professional expertise to achieve competitive results."
+      }
+    ],
+    "score": 89,
+    "createdAt": "2024-01-16T14:20:00.000Z"
+  },
+  {
+    "Id": 3,
+    "keywordId": "5",
+    "type": "ecommerce",
+    "title": "Premium Email Marketing Software - Drive Better Results",
+    "content": "Discover our advanced email marketing platform designed to help businesses create, send, and track high-converting email campaigns. Features include automation, segmentation, A/B testing, and detailed analytics.",
+    "entities": ["email marketing", "automation", "segmentation", "A/B testing", "analytics", "campaign management", "deliverability"],
+    "headings": ["Premium Email Marketing Platform", "Key Features", "Advanced Automation", "Detailed Analytics", "Pricing Plans", "Customer Success Stories"],
+    "faqs": [
+      {
+        "question": "What makes your email marketing software different?",
+        "answer": "Our platform combines advanced automation, intelligent segmentation, and comprehensive analytics to deliver superior email marketing results."
+      },
+      {
+        "question": "Is there a free trial available?",
+        "answer": "Yes, we offer a 14-day free trial with full access to all features so you can experience the platform before committing."
+      },
+      {
+        "question": "Do you provide customer support?",
+        "answer": "We offer 24/7 customer support via chat, email, and phone, plus comprehensive documentation and video tutorials."
+      }
+    ],
+    "score": 91,
+    "createdAt": "2024-01-19T11:30:00.000Z"
+  },
+  {
+    "Id": 4,
+    "keywordId": "3",
+    "type": "blog",
+    "title": "Content Marketing Strategy: A Complete Blueprint for Success",
+    "content": "Build a winning content marketing strategy that drives engagement, builds authority, and generates leads. This comprehensive guide covers planning, creation, distribution, and measurement of content marketing efforts.",
+    "entities": ["content marketing", "content strategy", "audience research", "content creation", "distribution channels", "content calendar", "ROI measurement"],
+    "headings": ["Content Marketing Fundamentals", "Audience Research", "Content Planning", "Creation Best Practices", "Distribution Strategies", "Measuring ROI"],
+    "faqs": [
+      {
+        "question": "How do I create a content marketing strategy?",
+        "answer": "Start with audience research, define your goals, create a content calendar, establish creation processes, and implement measurement systems."
+      },
+      {
+        "question": "What types of content work best?",
+        "answer": "The best content types depend on your audience, but typically include blog posts, videos, infographics, podcasts, and interactive content."
+      },
+      {
+        "question": "How often should I publish new content?",
+        "answer": "Consistency is key - whether it's daily, weekly, or monthly, maintain a regular publishing schedule that you can sustain long-term."
+      }
+    ],
+    "score": 87,
+    "createdAt": "2024-01-17T09:15:00.000Z"
+  },
+  {
+    "Id": 5,
+    "keywordId": "8",
+    "type": "blog",
+    "title": "Best CRM Software 2024: Complete Buyer's Guide",
+    "content": "Find the perfect CRM software for your business with our comprehensive 2024 buyer's guide. Compare features, pricing, and reviews of the top CRM platforms to make an informed decision.",
+    "entities": ["CRM software", "customer management", "sales automation", "lead tracking", "integration", "pricing comparison", "software reviews"],
+    "headings": ["CRM Software Overview", "Top CRM Platforms", "Feature Comparison", "Pricing Analysis", "Implementation Tips", "Making Your Decision"],
+    "faqs": [
+      {
+        "question": "What should I look for in CRM software?",
+        "answer": "Consider ease of use, integration capabilities, scalability, customer support, pricing, and features that match your specific business needs."
+      },
+      {
+        "question": "How much does CRM software cost?",
+        "answer": "CRM software ranges from free basic plans to enterprise solutions costing hundreds per user per month, depending on features and scale."
+      },
+      {
+        "question": "How long does CRM implementation take?",
+        "answer": "Implementation typically takes 2-12 weeks depending on the complexity of your setup, data migration needs, and team training requirements."
+      }
+    ],
+    "score": 93,
+    "createdAt": "2024-01-22T12:10:00.000Z"
+  }
+]

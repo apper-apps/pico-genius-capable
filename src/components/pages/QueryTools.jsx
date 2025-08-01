@@ -1,0 +1,312 @@
+import React, { useState } from "react"
+import SearchBar from "@/components/molecules/SearchBar"
+import Card from "@/components/atoms/Card"
+import Badge from "@/components/atoms/Badge"
+import Button from "@/components/atoms/Button"
+import Empty from "@/components/ui/Empty"
+import ApperIcon from "@/components/ApperIcon"
+import { toast } from "react-toastify"
+
+const QueryTools = () => {
+  const [queries, setQueries] = useState([])
+  const [generating, setGenerating] = useState(false)
+  const [selectedStage, setSelectedStage] = useState("all")
+
+  const handleGenerateQueries = async (keyword) => {
+    try {
+      setGenerating(true)
+      
+      // Simulate query generation
+      await new Promise(resolve => setTimeout(resolve, 2000))
+      
+      const newQueries = generateQueryFanOut(keyword)
+      setQueries(newQueries)
+      
+      toast.success("Query fan-out generated successfully!")
+    } catch (err) {
+      toast.error("Failed to generate queries")
+      console.error("Error generating queries:", err)
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  const generateQueryFanOut = (keyword) => {
+    const queryTemplates = {
+      awareness: [
+        `what is ${keyword}`,
+        `${keyword} definition`,
+        `why is ${keyword} important`,
+        `${keyword} explained`,
+        `${keyword} basics`,
+        `introduction to ${keyword}`,
+        `${keyword} overview`,
+        `${keyword} fundamentals`
+      ],
+      consideration: [
+        `best ${keyword}`,
+        `${keyword} comparison`,
+        `${keyword} vs alternatives`,
+        `${keyword} reviews`,
+        `${keyword} features`,
+        `${keyword} benefits`,
+        `${keyword} options`,
+        `${keyword} guide`,
+        `how to choose ${keyword}`,
+        `${keyword} checklist`
+      ],
+      decision: [
+        `${keyword} pricing`,
+        `${keyword} cost`,
+        `buy ${keyword}`,
+        `${keyword} discount`,
+        `${keyword} free trial`,
+        `${keyword} demo`,
+        `${keyword} services`,
+        `hire ${keyword} expert`,
+        `${keyword} consultation`,
+        `${keyword} implementation`
+      ]
+    }
+
+    const result = []
+    
+    Object.entries(queryTemplates).forEach(([stage, templates]) => {
+      templates.forEach((template, index) => {
+        result.push({
+          id: `${stage}-${index}`,
+          query: template,
+          stage,
+          searchVolume: Math.floor(Math.random() * 5000) + 100,
+          difficulty: Math.floor(Math.random() * 80) + 20,
+          intent: stage === "awareness" ? "informational" : 
+                 stage === "consideration" ? "commercial" : "transactional"
+        })
+      })
+    })
+    
+    return result.sort(() => 0.5 - Math.random()).slice(0, 20)
+  }
+
+  const exportQueries = () => {
+    if (queries.length === 0) return
+    
+    const csvContent = [
+      ["Query", "Stage", "Search Volume", "Difficulty", "Intent"],
+      ...queries.map(q => [q.query, q.stage, q.searchVolume, q.difficulty, q.intent])
+    ].map(row => row.join(",")).join("\n")
+    
+    const blob = new Blob([csvContent], { type: 'text/csv' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'query-fanout.csv'
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+    
+    toast.success("Queries exported successfully!")
+  }
+
+  const copyQueries = async () => {
+    if (queries.length === 0) return
+    
+    const textContent = queries
+      .filter(q => selectedStage === "all" || q.stage === selectedStage)
+      .map(q => q.query)
+      .join("\n")
+    
+    try {
+      await navigator.clipboard.writeText(textContent)
+      toast.success("Queries copied to clipboard!")
+    } catch (err) {
+      toast.error("Failed to copy queries")
+    }
+  }
+
+  const filteredQueries = selectedStage === "all" 
+    ? queries 
+    : queries.filter(q => q.stage === selectedStage)
+
+  const stageFilters = [
+    { id: "all", label: "All Stages", count: queries.length, color: "secondary" },
+    { id: "awareness", label: "Awareness", count: queries.filter(q => q.stage === "awareness").length, color: "info" },
+    { id: "consideration", label: "Consideration", count: queries.filter(q => q.stage === "consideration").length, color: "warning" },
+    { id: "decision", label: "Decision", count: queries.filter(q => q.stage === "decision").length, color: "success" }
+  ]
+
+  const getStageIcon = (stage) => {
+    const icons = {
+      awareness: "Eye",
+      consideration: "Search",
+      decision: "ShoppingCart"
+    }
+    return icons[stage] || "HelpCircle"
+  }
+
+  const getStageColor = (stage) => {
+    const colors = {
+      awareness: "info",
+      consideration: "warning",
+      decision: "success"
+    }
+    return colors[stage] || "secondary"
+  }
+
+  return (
+    <div className="space-y-8">
+      {/* Header */}
+      <div className="text-center">
+        <h1 className="text-3xl font-bold gradient-text mb-4">
+          Query Fan-Out Tool
+        </h1>
+        <p className="text-xl text-gray-400 max-w-3xl mx-auto">
+          Expand keywords into search journey stages: awareness → consideration → decision
+        </p>
+      </div>
+
+      {/* Search Bar */}
+      <Card className="p-6">
+        <SearchBar
+          onSearch={handleGenerateQueries}
+          placeholder="Enter seed keyword to generate query variations..."
+          loading={generating}
+        />
+      </Card>
+
+      {queries.length === 0 ? (
+        <Empty
+          title="Ready to Generate Query Variations?"
+          description="Enter a seed keyword above to generate related questions and searches organized by customer journey stage."
+          icon="Search"
+        />
+      ) : (
+        <div className="space-y-6">
+          {/* Stage Filters */}
+          <div className="flex flex-wrap gap-3 items-center justify-between">
+            <div className="flex flex-wrap gap-3">
+              {stageFilters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setSelectedStage(filter.id)}
+                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                    selectedStage === filter.id
+                      ? "bg-primary-500 text-white"
+                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  }`}
+                >
+                  <span>{filter.label}</span>
+                  <Badge variant="secondary" size="small">
+                    {filter.count}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center space-x-3">
+              <Button
+                variant="secondary"
+                size="small"
+                icon="Copy"
+                onClick={copyQueries}
+              >
+                Copy
+              </Button>
+              <Button
+                variant="secondary"
+                size="small"
+                icon="Download"
+                onClick={exportQueries}
+              >
+                Export CSV
+              </Button>
+            </div>
+          </div>
+
+          {/* Query Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredQueries.map((query) => (
+              <Card key={query.id} className="p-4 hover:shadow-lg transition-all duration-200">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center space-x-2">
+                    <ApperIcon 
+                      name={getStageIcon(query.stage)} 
+                      className="w-4 h-4 text-primary-400" 
+                    />
+                    <Badge variant={getStageColor(query.stage)} size="small">
+                      {query.stage}
+                    </Badge>
+                  </div>
+                  
+                  <button
+                    onClick={() => navigator.clipboard.writeText(query.query)}
+                    className="text-gray-400 hover:text-white transition-colors duration-200"
+                  >
+                    <ApperIcon name="Copy" className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <h3 className="text-white font-medium mb-3 line-clamp-2">
+                  {query.query}
+                </h3>
+
+                <div className="flex items-center justify-between text-sm text-gray-400">
+                  <div className="flex items-center space-x-1">
+                    <ApperIcon name="TrendingUp" className="w-3 h-3" />
+                    <span>{query.searchVolume.toLocaleString()}</span>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1">
+                    <ApperIcon name="Target" className="w-3 h-3" />
+                    <span>{query.difficulty}%</span>
+                  </div>
+                </div>
+              </Card>
+            ))}
+          </div>
+
+          {/* Summary Stats */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold text-white mb-4">Query Summary</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {["awareness", "consideration", "decision"].map((stage) => {
+                const stageQueries = queries.filter(q => q.stage === stage)
+                const avgVolume = stageQueries.length > 0 
+                  ? Math.round(stageQueries.reduce((sum, q) => sum + q.searchVolume, 0) / stageQueries.length)
+                  : 0
+                const avgDifficulty = stageQueries.length > 0
+                  ? Math.round(stageQueries.reduce((sum, q) => sum + q.difficulty, 0) / stageQueries.length)
+                  : 0
+
+                return (
+                  <div key={stage} className="text-center">
+                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary-500 to-purple-500 flex items-center justify-center">
+                      <ApperIcon 
+                        name={getStageIcon(stage)} 
+                        className="w-8 h-8 text-white" 
+                      />
+                    </div>
+                    
+                    <h4 className="text-lg font-semibold text-white mb-1 capitalize">
+                      {stage}
+                    </h4>
+                    
+                    <div className="text-sm text-gray-400 space-y-1">
+                      <div>{stageQueries.length} queries</div>
+                      <div>Avg. volume: {avgVolume.toLocaleString()}</div>
+                      <div>Avg. difficulty: {avgDifficulty}%</div>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </Card>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default QueryTools

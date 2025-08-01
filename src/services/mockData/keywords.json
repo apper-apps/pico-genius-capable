@@ -1,0 +1,82 @@
+[
+  {
+    "Id": 1,
+    "keyword": "digital marketing services",
+    "intent": "commercial",
+    "volume": 8500,
+    "difficulty": 78,
+    "timestamp": "2024-01-15T10:30:00.000Z"
+  },
+  {
+    "Id": 2,
+    "keyword": "SEO optimization guide",
+    "intent": "informational",
+    "volume": 12400,
+    "difficulty": 65,
+    "timestamp": "2024-01-16T14:20:00.000Z"
+  },
+  {
+    "Id": 3,
+    "keyword": "content marketing strategy",
+    "intent": "informational",
+    "volume": 6800,
+    "difficulty": 72,
+    "timestamp": "2024-01-17T09:15:00.000Z"
+  },
+  {
+    "Id": 4,
+    "keyword": "buy social media tools",
+    "intent": "transactional",
+    "volume": 3200,
+    "difficulty": 84,
+    "timestamp": "2024-01-18T16:45:00.000Z"
+  },
+  {
+    "Id": 5,
+    "keyword": "email marketing software",
+    "intent": "commercial",
+    "volume": 9800,
+    "difficulty": 79,
+    "timestamp": "2024-01-19T11:30:00.000Z"
+  },
+  {
+    "Id": 6,
+    "keyword": "what is affiliate marketing",
+    "intent": "informational",
+    "volume": 15600,
+    "difficulty": 58,
+    "timestamp": "2024-01-20T13:25:00.000Z"
+  },
+  {
+    "Id": 7,
+    "keyword": "PPC advertising cost",
+    "intent": "commercial",
+    "volume": 4700,
+    "difficulty": 68,
+    "timestamp": "2024-01-21T08:40:00.000Z"
+  },
+  {
+    "Id": 8,
+    "keyword": "best CRM software 2024",
+    "intent": "commercial",
+    "volume": 7300,
+    "difficulty": 75,
+    "timestamp": "2024-01-22T12:10:00.000Z"
+  },
+  {
+    "Id": 9,
+    "keyword": "conversion rate optimization",
+    "intent": "informational",
+    "volume": 5900,
+    "difficulty": 71,
+    "timestamp": "2024-01-23T15:20:00.000Z"
+  },
+  {
+    "Id": 10,
+    "keyword": "purchase analytics platform",
+    "intent": "transactional",
+    "volume": 2800,
+    "difficulty": 82,
+    "timestamp": "2024-01-24T10:55:00.000Z"
+  }
+]

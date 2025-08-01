@@ -1,0 +1,127 @@
+[
+  {
+    "Id": 1,
+    "mainTopic": "Digital Marketing",
+    "intent": "commercial",
+    "subtopics": [
+      "Digital marketing strategy",
+      "Online advertising platforms",
+      "Marketing automation tools",
+      "Digital marketing ROI measurement",
+      "Multi-channel marketing campaigns",
+      "Customer acquisition strategies"
+    ],
+    "keywords": [
+      "digital marketing services",
+      "online marketing agency",
+      "digital advertising",
+      "marketing automation",
+      "lead generation",
+      "conversion optimization",
+      "marketing analytics",
+      "customer acquisition cost",
+      "digital marketing strategy",
+      "online marketing tools"
+    ]
+  },
+  {
+    "Id": 2,
+    "mainTopic": "SEO Optimization",
+    "intent": "informational",
+    "subtopics": [
+      "Keyword research techniques",
+      "On-page SEO best practices",
+      "Technical SEO optimization",
+      "Link building strategies",
+      "SEO content creation",
+      "Local SEO tactics"
+    ],
+    "keywords": [
+      "SEO optimization guide",
+      "keyword research tools",
+      "on-page SEO",
+      "technical SEO",
+      "link building",
+      "SEO ranking factors",
+      "search engine optimization",
+      "SEO best practices",
+      "local SEO",
+      "SEO content writing"
+    ]
+  },
+  {
+    "Id": 3,
+    "mainTopic": "Content Marketing",
+    "intent": "informational",
+    "subtopics": [
+      "Content strategy development",
+      "Blog content creation",
+      "Video marketing tactics",
+      "Content distribution channels",
+      "Content performance measurement",
+      "Editorial calendar planning"
+    ],
+    "keywords": [
+      "content marketing strategy",
+      "blog content creation",
+      "video marketing",
+      "content distribution",
+      "content calendar",
+      "content ROI",
+      "storytelling marketing",
+      "content planning",
+      "content optimization",
+      "content marketing tools"
+    ]
+  },
+  {
+    "Id": 4,
+    "mainTopic": "Email Marketing Software",
+    "intent": "transactional",
+    "subtopics": [
+      "Email automation features",
+      "Email design templates",
+      "List segmentation tools",
+      "A/B testing capabilities",
+      "Deliverability optimization",
+      "Analytics and reporting"
+    ],
+    "keywords": [
+      "email marketing software",
+      "email automation platform",
+      "email marketing tools",
+      "email campaign management",
+      "email list building",
+      "email deliverability",
+      "email analytics",
+      "marketing automation software",
+      "email segmentation",
+      "email marketing ROI"
+    ]
+  },
+  {
+    "Id": 5,
+    "mainTopic": "Social Media Marketing",
+    "intent": "commercial",
+    "subtopics": [
+      "Social media strategy planning",
+      "Platform-specific tactics",
+      "Social media advertising",
+      "Community management",
+      "Influencer marketing",
+      "Social media analytics"
+    ],
+    "keywords": [
+      "social media marketing",
+      "social media strategy",
+      "Facebook advertising",
+      "Instagram marketing",
+      "LinkedIn marketing",
+      "social media management",
+      "social media ROI",
+      "influencer marketing",
+      "social media analytics",
+      "community management"
+    ]
+  }
+]
