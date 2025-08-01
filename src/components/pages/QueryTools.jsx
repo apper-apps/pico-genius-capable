@@ -1,25 +1,27 @@
-import React, { useState } from "react"
-import SearchBar from "@/components/molecules/SearchBar"
-import Card from "@/components/atoms/Card"
-import Badge from "@/components/atoms/Badge"
-import Button from "@/components/atoms/Button"
-import Empty from "@/components/ui/Empty"
-import ApperIcon from "@/components/ApperIcon"
-import { toast } from "react-toastify"
-
+import React, { useState } from "react";
+import TreeDiagram from "@/components/molecules/TreeDiagram";
+import { toast } from "react-toastify";
+import ApperIcon from "@/components/ApperIcon";
+import SearchBar from "@/components/molecules/SearchBar";
+import Empty from "@/components/ui/Empty";
+import Badge from "@/components/atoms/Badge";
+import Button from "@/components/atoms/Button";
+import Card from "@/components/atoms/Card";
 const QueryTools = () => {
   const [queries, setQueries] = useState([])
   const [generating, setGenerating] = useState(false)
   const [selectedStage, setSelectedStage] = useState("all")
-
-  const handleGenerateQueries = async (keyword) => {
+  const [viewMode, setViewMode] = useState("grid")
+  const [keyword, setKeyword] = useState("")
+const handleGenerateQueries = async (searchKeyword) => {
     try {
       setGenerating(true)
+      setKeyword(searchKeyword)
       
       // Simulate query generation
       await new Promise(resolve => setTimeout(resolve, 2000))
       
-      const newQueries = generateQueryFanOut(keyword)
+      const newQueries = generateQueryFanOut(searchKeyword)
       setQueries(newQueries)
       
       toast.success("Query fan-out generated successfully!")
@@ -182,26 +184,55 @@ const QueryTools = () => {
           icon="Search"
         />
       ) : (
-        <div className="space-y-6">
-          {/* Stage Filters */}
+<div className="space-y-6">
+          {/* View Mode Toggle and Actions */}
           <div className="flex flex-wrap gap-3 items-center justify-between">
-            <div className="flex flex-wrap gap-3">
-              {stageFilters.map((filter) => (
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center bg-gray-800 rounded-lg p-1">
                 <button
-                  key={filter.id}
-                  onClick={() => setSelectedStage(filter.id)}
-                  className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
-                    selectedStage === filter.id
-                      ? "bg-primary-500 text-white"
-                      : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  onClick={() => setViewMode('grid')}
+                  className={`inline-flex items-center space-x-2 px-3 py-2 rounded-md font-medium transition-all duration-200 ${
+                    viewMode === 'grid' 
+                      ? "bg-primary-500 text-white" 
+                      : "text-gray-400 hover:text-white"
                   }`}
                 >
-                  <span>{filter.label}</span>
-                  <Badge variant="secondary" size="small">
-                    {filter.count}
-                  </Badge>
+                  <ApperIcon name="Grid3X3" className="w-4 h-4" />
+                  <span>Grid</span>
                 </button>
-              ))}
+                <button
+                  onClick={() => setViewMode('tree')}
+                  className={`inline-flex items-center space-x-2 px-3 py-2 rounded-md font-medium transition-all duration-200 ${
+                    viewMode === 'tree' 
+                      ? "bg-primary-500 text-white" 
+                      : "text-gray-400 hover:text-white"
+                  }`}
+                >
+                  <ApperIcon name="GitBranch" className="w-4 h-4" />
+                  <span>Tree</span>
+                </button>
+              </div>
+
+              {viewMode === 'grid' && (
+                <div className="flex flex-wrap gap-3">
+                  {stageFilters.map((filter) => (
+                    <button
+                      key={filter.id}
+                      onClick={() => setSelectedStage(filter.id)}
+                      className={`inline-flex items-center space-x-2 px-4 py-2 rounded-lg font-medium transition-all duration-200 ${
+                        selectedStage === filter.id
+                          ? "bg-primary-500 text-white"
+                          : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                      }`}
+                    >
+                      <span>{filter.label}</span>
+                      <Badge variant="secondary" size="small">
+                        {filter.count}
+                      </Badge>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             <div className="flex items-center space-x-3">
@@ -224,85 +255,102 @@ const QueryTools = () => {
             </div>
           </div>
 
-          {/* Query Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredQueries.map((query) => (
-              <Card key={query.id} className="p-4 hover:shadow-lg transition-all duration-200">
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    <ApperIcon 
-                      name={getStageIcon(query.stage)} 
-                      className="w-4 h-4 text-primary-400" 
-                    />
-                    <Badge variant={getStageColor(query.stage)} size="small">
-                      {query.stage}
-                    </Badge>
-                  </div>
-                  
-                  <button
-                    onClick={() => navigator.clipboard.writeText(query.query)}
-                    className="text-gray-400 hover:text-white transition-colors duration-200"
-                  >
-                    <ApperIcon name="Copy" className="w-4 h-4" />
-                  </button>
-                </div>
+          {/* Tree View */}
+          {viewMode === 'tree' && (
+            <TreeDiagram 
+              keyword={keyword}
+              queries={queries}
+              onUpdateQueries={(updatedQueries) => {
+                setQueries(updatedQueries)
+                toast.success('Query organization updated!')
+              }}
+            />
+          )}
 
-                <h3 className="text-white font-medium mb-3 line-clamp-2">
-                  {query.query}
-                </h3>
+          {/* Grid View */}
+          {viewMode === 'grid' && (
+            <>
+              {/* Query Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredQueries.map((query) => (
+                  <Card key={query.id} className="p-4 hover:shadow-lg transition-all duration-200">
+                    <div className="flex items-start justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        <ApperIcon 
+                          name={getStageIcon(query.stage)} 
+                          className="w-4 h-4 text-primary-400" 
+                        />
+                        <Badge variant={getStageColor(query.stage)} size="small">
+                          {query.stage}
+                        </Badge>
+                      </div>
+                      
+                      <button
+                        onClick={() => navigator.clipboard.writeText(query.query)}
+                        className="text-gray-400 hover:text-white transition-colors duration-200"
+                      >
+                        <ApperIcon name="Copy" className="w-4 h-4" />
+                      </button>
+                    </div>
 
-                <div className="flex items-center justify-between text-sm text-gray-400">
-                  <div className="flex items-center space-x-1">
-                    <ApperIcon name="TrendingUp" className="w-3 h-3" />
-                    <span>{query.searchVolume.toLocaleString()}</span>
-                  </div>
-                  
-                  <div className="flex items-center space-x-1">
-                    <ApperIcon name="Target" className="w-3 h-3" />
-                    <span>{query.difficulty}%</span>
-                  </div>
+                    <h3 className="text-white font-medium mb-3 line-clamp-2">
+                      {query.query}
+                    </h3>
+
+                    <div className="flex items-center justify-between text-sm text-gray-400">
+                      <div className="flex items-center space-x-1">
+                        <ApperIcon name="TrendingUp" className="w-3 h-3" />
+                        <span>{query.searchVolume.toLocaleString()}</span>
+                      </div>
+                      
+                      <div className="flex items-center space-x-1">
+                        <ApperIcon name="Target" className="w-3 h-3" />
+                        <span>{query.difficulty}%</span>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Summary Stats */}
+              <Card className="p-6">
+                <h3 className="text-lg font-semibold text-white mb-4">Query Summary</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  {["awareness", "consideration", "decision"].map((stage) => {
+                    const stageQueries = queries.filter(q => q.stage === stage)
+                    const avgVolume = stageQueries.length > 0 
+                      ? Math.round(stageQueries.reduce((sum, q) => sum + q.searchVolume, 0) / stageQueries.length)
+                      : 0
+                    const avgDifficulty = stageQueries.length > 0
+                      ? Math.round(stageQueries.reduce((sum, q) => sum + q.difficulty, 0) / stageQueries.length)
+                      : 0
+
+                    return (
+                      <div key={stage} className="text-center">
+                        <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary-500 to-purple-500 flex items-center justify-center">
+                          <ApperIcon 
+                            name={getStageIcon(stage)} 
+                            className="w-8 h-8 text-white" 
+                          />
+                        </div>
+                        
+                        <h4 className="text-lg font-semibold text-white mb-1 capitalize">
+                          {stage}
+                        </h4>
+                        
+                        <div className="text-sm text-gray-400 space-y-1">
+                          <div>{stageQueries.length} queries</div>
+                          <div>Avg. volume: {avgVolume.toLocaleString()}</div>
+                          <div>Avg. difficulty: {avgDifficulty}%</div>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               </Card>
-            ))}
-          </div>
-
-          {/* Summary Stats */}
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold text-white mb-4">Query Summary</h3>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {["awareness", "consideration", "decision"].map((stage) => {
-                const stageQueries = queries.filter(q => q.stage === stage)
-                const avgVolume = stageQueries.length > 0 
-                  ? Math.round(stageQueries.reduce((sum, q) => sum + q.searchVolume, 0) / stageQueries.length)
-                  : 0
-                const avgDifficulty = stageQueries.length > 0
-                  ? Math.round(stageQueries.reduce((sum, q) => sum + q.difficulty, 0) / stageQueries.length)
-                  : 0
-
-                return (
-                  <div key={stage} className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-primary-500 to-purple-500 flex items-center justify-center">
-                      <ApperIcon 
-                        name={getStageIcon(stage)} 
-                        className="w-8 h-8 text-white" 
-                      />
-                    </div>
-                    
-                    <h4 className="text-lg font-semibold text-white mb-1 capitalize">
-                      {stage}
-                    </h4>
-                    
-                    <div className="text-sm text-gray-400 space-y-1">
-                      <div>{stageQueries.length} queries</div>
-                      <div>Avg. volume: {avgVolume.toLocaleString()}</div>
-                      <div>Avg. difficulty: {avgDifficulty}%</div>
-                    </div>
-                  </div>
-                )
-              })}
-            </div>
-          </Card>
+            </>
+          )}
         </div>
       )}
     </div>
