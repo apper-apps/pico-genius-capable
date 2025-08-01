@@ -50,24 +50,43 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
         console.log(`SERP API request successful for keyword: "${keyword}"`);
         
         return this.processSerpResults(data, keyword);
-      } catch (fetchError) {
+} catch (fetchError) {
         clearTimeout(timeoutId);
         
-        // Enhanced error logging with context
+        // Enhanced error logging with proper serialization
         console.error('SERP API Fetch Error Details:', {
           keyword,
-          error: fetchError.message,
-          type: fetchError.name,
-          stack: fetchError.stack
+          error: fetchError?.message || 'Unknown fetch error',
+          type: fetchError?.name || 'Error',
+          stack: fetchError?.stack || 'No stack trace available',
+          timestamp: new Date().toISOString(),
+          url: fetchError?.url || 'Unknown URL'
         });
         
-        throw fetchError;
+        // Create a serializable error with meaningful message
+        const serializedError = new Error(
+          fetchError?.message || `SERP API request failed for keyword: ${keyword}`
+        );
+        serializedError.name = fetchError?.name || 'SerpApiError';
+        serializedError.originalError = {
+          message: fetchError?.message,
+          name: fetchError?.name,
+          stack: fetchError?.stack
+        };
+        
+        throw serializedError;
       }
     } catch (error) {
-      console.error('SERP API Error:', error);
+      // Enhanced error logging with structured details
+      console.error('SERP API Error:', {
+        keyword,
+        message: error?.message || 'Unknown error',
+        name: error?.name || 'Error',
+        stack: error?.stack || 'No stack trace'
+      });
       
       // Handle specific error types with enhanced messaging
-      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+      if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
         const errorMsg = 'Network connection failed - unable to reach SERP API servers. This could be due to CORS policy, network connectivity issues, or blocked requests.';
         console.warn(errorMsg, 'Falling back to mock data for demo purposes');
         

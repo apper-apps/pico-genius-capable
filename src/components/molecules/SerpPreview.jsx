@@ -53,7 +53,19 @@ const analyzeHeadingPatterns = (results) => {
 
 // Handle error state with enhanced messaging
 if (error) {
-    const errorLower = error?.toLowerCase() || '';
+    // Safely extract error message from various formats
+    let errorMessage = '';
+    if (typeof error === 'string') {
+      errorMessage = error;
+    } else if (error?.message) {
+      errorMessage = error.message;
+    } else if (error?.error) {
+      errorMessage = error.error;
+    } else {
+      errorMessage = 'Unknown error occurred while fetching SERP data';
+    }
+    
+    const errorLower = errorMessage.toLowerCase();
     const isNetworkError = errorLower.includes('network connection failed') || 
                           errorLower.includes('failed to fetch') ||
                           errorLower.includes('cors policy')
@@ -117,9 +129,9 @@ if (error) {
           <ApperIcon 
             name={iconName} 
             className="w-12 h-12 text-gray-600 mx-auto mb-4" 
-          />
+/>
           <p className="text-gray-400 mb-2">{description}</p>
-          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          <p className="text-sm text-gray-500 mb-4">{errorMessage}</p>
           
           {/* Network/Timeout specific guidance */}
           {(errorType === 'network' || errorType === 'timeout') && (

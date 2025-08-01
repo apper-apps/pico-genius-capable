@@ -87,9 +87,29 @@ setCurrentContent(newContent)
       setContent(prev => [newContent, ...prev])
       toast.success(`Content generated successfully! SEO Score: ${optimizedContent.seoScore}/100`)
 } catch (err) {
-      console.error("Error generating content:", err)
+      console.error("Error generating content:", {
+        message: err?.message || 'Unknown error',
+        name: err?.name || 'Error',
+        stack: err?.stack || 'No stack trace',
+        keyword,
+        contentType
+      });
       
-      const errorMsg = err?.message || 'Unknown error occurred';
+      // Safely extract error message with multiple fallbacks
+      let errorMsg = 'Unknown error occurred during content generation';
+      if (typeof err === 'string') {
+        errorMsg = err;
+      } else if (err?.message && typeof err.message === 'string') {
+        errorMsg = err.message;
+      } else if (err?.error && typeof err.error === 'string') {
+        errorMsg = err.error;
+      } else if (err?.toString && typeof err.toString === 'function') {
+        const stringified = err.toString();
+        if (stringified !== '[object Object]') {
+          errorMsg = stringified;
+        }
+      }
+      
       const errorLower = errorMsg.toLowerCase();
       
       // Enhanced error categorization with specific handling
@@ -855,7 +875,7 @@ const handleToggleEntity = (entity) => {
             <SerpPreview 
               results={serpResults || []}
               loading={serpLoading}
-              error={error && serpResults.length === 0 ? error : null}
+error={error && serpResults.length === 0 ? error : null}
             />
           </div>
           
