@@ -142,15 +142,15 @@ const handleGenerate = async ({ keyword, contentType }) => {
         setError("Failed to generate content. Please try again or contact support if the issue persists.")
         toast.error("Content generation failed. Please try again.")
         setSerpLoading(false)
-      }
+}
     } finally {
-} finally {
       setLoading(false)
     }
   }
+}
 
   // Analyze competitor content from SERP results with enhanced error handling
-    try {
+  const analyzeCompetitorContent = async (topResults) => {
       // Validate input
       if (!topResults || !Array.isArray(topResults) || topResults.length === 0) {
         console.warn('No SERP results available for competitor analysis')

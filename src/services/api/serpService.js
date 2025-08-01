@@ -91,8 +91,8 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
       throw new Error(`SERP API Error: ${error.message}. Using offline mode.`)
     }
   },
-
-  // Fallback method to provide mock SERP data
+// Fallback method to provide mock SERP data
+  getFallbackSerpData(keyword) {
     try {
       // Import mock data dynamically
       const mockDataModule = await import('@/services/mockData/serpResults.json')
@@ -114,12 +114,12 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
       console.error('Failed to load mock SERP data:', mockError)
       
       // Ultimate fallback: generate basic SERP results
+// Ultimate fallback: generate basic SERP results
       return this.generateBasicSerpResults(keyword)
     }
-  }
+  },
 
   // Generate basic SERP results as last resort
-  generateBasicSerpResults(keyword) {
     const basicResults = []
     const domains = ['wikipedia.org', 'example.com', 'guide.com', 'howto.com', 'best-practices.org']
     
