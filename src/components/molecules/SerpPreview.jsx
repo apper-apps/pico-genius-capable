@@ -7,11 +7,10 @@ import Card from "@/components/atoms/Card";
 const SerpPreview = ({ results = [], loading = false, error, className = "" }) => {
   const [showHeadingAnalysis, setShowHeadingAnalysis] = useState(false)
 
-  const analyzeHeadingPatterns = (results) => {
+const analyzeHeadingPatterns = (results) => {
     if (!results || !Array.isArray(results) || results.length === 0) {
       return []
     }
-}
     
     const patterns = new Map()
     results.forEach(result => {
@@ -24,8 +23,7 @@ const SerpPreview = ({ results = [], loading = false, error, className = "" }) =
             }
           }
         })
-      }
-    })
+      })
     
     return Array.from(patterns.entries())
       .sort((a, b) => b[1] - a[1])
@@ -134,9 +132,8 @@ return (
           <div key={result?.position || index} className="border-l-2 border-gray-700 pl-4 pb-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center space-x-2">
-                <Badge variant="secondary" size="small">
+<Badge variant="secondary" size="small">
                   #{result?.position || index + 1}
-#{result?.position || index + 1}
                 </Badge>
                 <span className="text-xs text-gray-500">{result?.url || 'No URL'}</span>
               </div>

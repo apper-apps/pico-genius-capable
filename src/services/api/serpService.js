@@ -43,10 +43,8 @@ if (!response.ok) {
       if (error.name === 'AbortError') {
         throw new Error('Request timed out. Please try again.')
       }
-      
-      // Re-throw API errors with more context
+// Re-throw API errors with more context
       throw new Error(`SERP API Error: ${error.message}`)
-      return this.generateFallbackResults(keyword)
     }
   },
 
@@ -108,12 +106,11 @@ if (!response.ok) {
       if (!result) {
         throw new Error(`SERP result not found at position ${position}`)
       }
-      return result
+return result
     } catch (error) {
       console.error('Error getting SERP result by position:', error)
       throw new Error(`Failed to retrieve SERP result: ${error.message}`)
     }
-    return { ...result }
   },
 
   processSerpResults(serpData, keyword) {
