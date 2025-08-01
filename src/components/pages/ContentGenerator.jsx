@@ -83,10 +83,10 @@ const handleGenerate = async ({ keyword, contentType }) => {
         recommendations: optimizedContent.recommendations
       })
 
-      setCurrentContent(newContent)
+setCurrentContent(newContent)
       setContent(prev => [newContent, ...prev])
       toast.success(`Content generated successfully! SEO Score: ${optimizedContent.seoScore}/100`)
-} catch (err) {
+    } catch (err) {
       console.error("Error generating content:", err)
       
       // Handle specific SERP API errors with enhanced messaging
@@ -142,12 +142,11 @@ const handleGenerate = async ({ keyword, contentType }) => {
         setError("Failed to generate content. Please try again or contact support if the issue persists.")
         toast.error("Content generation failed. Please try again.")
         setSerpLoading(false)
-}
+      }
     } finally {
       setLoading(false)
     }
   }
-}
 
   // Analyze competitor content from SERP results with enhanced error handling
 const analyzeCompetitorContent = async (topResults) => {
