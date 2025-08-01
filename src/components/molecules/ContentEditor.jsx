@@ -5,7 +5,7 @@ import Badge from "@/components/atoms/Badge"
 import ApperIcon from "@/components/ApperIcon"
 import { toast } from "react-toastify"
 
-const ContentEditor = ({ content, onExport, className = "" }) => {
+const ContentEditor = ({ content, onExport, highlightedEntities = [], className = "" }) => {
   const [activeTab, setActiveTab] = useState("content")
   const [copied, setCopied] = useState(false)
 
@@ -46,15 +46,30 @@ const ContentEditor = ({ content, onExport, className = "" }) => {
       toast.error("Failed to copy content")
     }
   }
+const highlightEntities = (text) => {
+    if (!text || !highlightedEntities.length) return text
+    
+    let highlightedText = text
+    highlightedEntities.forEach(entity => {
+      const regex = new RegExp(`\\b${entity.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi')
+      highlightedText = highlightedText.replace(regex, match => 
+        `<mark class="bg-primary-500/30 text-primary-200 px-1 py-0.5 rounded">${match}</mark>`
+      )
+    })
+    return highlightedText
+  }
 
   const renderTabContent = () => {
-    switch (activeTab) {
+switch (activeTab) {
       case "content":
         return (
           <div className="prose prose-invert max-w-none">
-            <div className="whitespace-pre-wrap text-gray-300 leading-relaxed">
-              {content.content || "No content generated yet."}
-            </div>
+            <div 
+              className="whitespace-pre-wrap text-gray-300 leading-relaxed"
+              dangerouslySetInnerHTML={{
+                __html: highlightEntities(content.content || "No content generated yet.")
+              }}
+            />
           </div>
         )
 

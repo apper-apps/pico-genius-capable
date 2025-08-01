@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react"
 import ContentGenerationForm from "@/components/organisms/ContentGenerationForm"
 import SerpPreview from "@/components/molecules/SerpPreview"
 import ContentEditor from "@/components/molecules/ContentEditor"
+import EntitySidebar from "@/components/molecules/EntitySidebar"
 import Loading from "@/components/ui/Loading"
 import Error from "@/components/ui/Error"
 import Empty from "@/components/ui/Empty"
@@ -12,7 +13,7 @@ import serpService from "@/services/api/serpService"
 import { toast } from "react-toastify"
 
 const ContentGenerator = () => {
-  const [keywords, setKeywords] = useState([])
+const [keywords, setKeywords] = useState([])
   const [content, setContent] = useState([])
   const [serpResults, setSerpResults] = useState([])
   const [currentContent, setCurrentContent] = useState(null)
@@ -20,7 +21,7 @@ const ContentGenerator = () => {
   const [serpLoading, setSerpLoading] = useState(false)
   const [error, setError] = useState("")
   const [showResults, setShowResults] = useState(false)
-
+  const [highlightedEntities, setHighlightedEntities] = useState([])
   useEffect(() => {
     loadInitialData()
   }, [])
@@ -306,11 +307,17 @@ Order your ${keyword} today and experience the difference quality makes.`
     
     toast.success(`Content exported as ${format.toUpperCase()}`)
   }
+const handleToggleEntity = (entity) => {
+    setHighlightedEntities(prev => 
+      prev.includes(entity)
+        ? prev.filter(e => e !== entity)
+        : [...prev, entity]
+    )
+  }
 
   const retryLoad = () => {
     loadInitialData()
   }
-
   if (loading && !showResults) {
     return <Loading />
   }
@@ -385,18 +392,27 @@ Order your ${keyword} today and experience the difference quality makes.`
             </div>
           )}
         </>
-      ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-1 space-y-6">
+) : (
+        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+          <div className="xl:col-span-1 space-y-6">
             <SerpPreview 
               results={serpResults}
               loading={serpLoading}
             />
           </div>
           
-          <div className="lg:col-span-2">
+          <div className="xl:col-span-1">
+            <EntitySidebar
+              serpResults={serpResults}
+              highlightedEntities={highlightedEntities}
+              onToggleEntity={handleToggleEntity}
+            />
+          </div>
+          
+          <div className="xl:col-span-2">
             <ContentEditor
               content={currentContent || {}}
+              highlightedEntities={highlightedEntities}
               onExport={handleExport}
             />
           </div>
