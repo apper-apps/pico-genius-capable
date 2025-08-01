@@ -150,7 +150,8 @@ const handleGenerate = async ({ keyword, contentType }) => {
 }
 
   // Analyze competitor content from SERP results with enhanced error handling
-  const analyzeCompetitorContent = async (topResults) => {
+const analyzeCompetitorContent = async (topResults) => {
+    try {
       // Validate input
       if (!topResults || !Array.isArray(topResults) || topResults.length === 0) {
         console.warn('No SERP results available for competitor analysis')
