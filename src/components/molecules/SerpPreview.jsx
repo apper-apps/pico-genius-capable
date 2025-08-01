@@ -51,18 +51,54 @@ const analyzeHeadingPatterns = (results) => {
     )
 }
 
-  // Handle error state
+// Handle error state with enhanced messaging
   if (error) {
+    const isNetworkError = error.includes('Network connection failed') || error.includes('Failed to fetch')
+    const isTimeoutError = error.includes('timed out') || error.includes('timeout')
+    const isOfflineMode = error.includes('offline mode') || error.includes('Using offline mode')
+    
     return (
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center mb-4">
-          <ApperIcon name="AlertCircle" className="w-5 h-5 text-red-400 mr-3" />
-          <h3 className="text-lg font-semibold text-white">SERP Preview - Error</h3>
+          <ApperIcon 
+            name={isNetworkError ? "WifiOff" : isTimeoutError ? "Clock" : "AlertCircle"} 
+            className="w-5 h-5 text-red-400 mr-3" 
+          />
+          <h3 className="text-lg font-semibold text-white">
+            SERP Preview - {isOfflineMode ? 'Offline Mode' : 'Connection Issue'}
+          </h3>
         </div>
         <div className="text-center py-8">
-          <ApperIcon name="Wifi" className="w-12 h-12 text-gray-600 mx-auto mb-4" />
-          <p className="text-gray-400 mb-2">Failed to load search results</p>
-          <p className="text-sm text-gray-500">{error}</p>
+          <ApperIcon 
+            name={isNetworkError ? "WifiOff" : isTimeoutError ? "Clock" : "AlertTriangle"} 
+            className="w-12 h-12 text-gray-600 mx-auto mb-4" 
+          />
+          <p className="text-gray-400 mb-2">
+            {isNetworkError ? 'Connection Error' : 
+             isTimeoutError ? 'Request Timeout' : 
+             isOfflineMode ? 'Using Offline Data' : 'Failed to load search results'}
+          </p>
+          <p className="text-sm text-gray-500 mb-4">{error}</p>
+          
+          {(isNetworkError || isTimeoutError) && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">
+                {isNetworkError ? 'Check your internet connection and try again' : 'The request is taking too long. Please try again.'}
+              </p>
+              <button
+                onClick={() => window.location.reload()}
+                className="text-primary-400 hover:text-primary-300 text-sm font-medium underline"
+              >
+                Retry Connection
+              </button>
+            </div>
+          )}
+          
+          {isOfflineMode && (
+            <p className="text-xs text-gray-600">
+              Using cached data for demonstration purposes
+            </p>
+          )}
         </div>
       </Card>
     )

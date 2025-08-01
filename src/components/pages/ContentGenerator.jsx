@@ -89,27 +89,67 @@ const handleGenerate = async ({ keyword, contentType }) => {
 } catch (err) {
       console.error("Error generating content:", err)
       
-      // Handle specific SERP API errors
-      if (err.message.includes('Network connection failed')) {
+      // Handle specific SERP API errors with enhanced messaging
+      if (err.message.includes('Network connection failed') || err.message.includes('Failed to fetch')) {
         setError("Network connection failed. Please check your internet connection and try again.")
         toast.error("Connection error. Please check your network and retry.")
-      } else if (err.message.includes('SERP API Error')) {
+        // Still try to generate content with fallback data
+        try {
+          setSerpLoading(false)
+          const fallbackContent = await generateFallbackContent(keyword, contentType, { 
+            keyword, 
+            searchVolume: 1000, 
+            difficulty: 50,
+            intent: 'informational',
+            relatedKeywords: []
+          })
+          
+          const newContent = await contentService.create({
+            keyword,
+            type: contentType,
+            title: fallbackContent.title,
+            content: fallbackContent.content,
+            entities: fallbackContent.entities,
+            headings: fallbackContent.headings,
+            faqs: fallbackContent.faqs,
+            score: fallbackContent.seoScore,
+            recommendations: fallbackContent.recommendations
+          })
+          
+          setCurrentContent(newContent)
+          setContent(prev => [newContent, ...prev])
+          toast.info(`Content generated in offline mode! SEO Score: ${fallbackContent.seoScore}/100`)
+        } catch (fallbackError) {
+          console.error('Fallback content generation failed:', fallbackError)
+        }
+      } else if (err.message.includes('SERP API Error') || err.message.includes('Using offline mode')) {
         setError("Search results service is temporarily unavailable. Using fallback content generation.")
         toast.warning("Using offline mode - some features may be limited.")
-      } else if (err.message.includes('timed out')) {
+        setSerpLoading(false)
+      } else if (err.message.includes('timed out') || err.message.includes('timeout')) {
         setError("Request timed out. Please try again with a simpler query.")
         toast.error("Request timeout. Please try again.")
+        setSerpLoading(false)
+      } else if (err.message.includes('rate limit')) {
+        setError("API rate limit exceeded. Please wait a moment before trying again.")
+        toast.error("Too many requests. Please wait a moment and retry.")
+        setSerpLoading(false)
+      } else if (err.message.includes('authentication')) {
+        setError("API authentication failed. Please check your configuration.")
+        toast.error("Authentication error. Please contact support.")
+        setSerpLoading(false)
       } else {
         setError("Failed to generate content. Please try again or contact support if the issue persists.")
         toast.error("Content generation failed. Please try again.")
+        setSerpLoading(false)
       }
     } finally {
+} finally {
       setLoading(false)
     }
   }
 
   // Analyze competitor content from SERP results with enhanced error handling
-const analyzeCompetitorContent = async (topResults) => {
     try {
       // Validate input
       if (!topResults || !Array.isArray(topResults) || topResults.length === 0) {
@@ -774,11 +814,12 @@ const handleToggleEntity = (entity) => {
           )}
         </>
 ) : (
-        <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
+<div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
           <div className="xl:col-span-1 space-y-6">
             <SerpPreview 
-              results={serpResults}
+              results={serpResults || []}
               loading={serpLoading}
+              error={error && serpResults.length === 0 ? error : null}
             />
           </div>
           
