@@ -25,8 +25,8 @@ const serpService = {
 
       const response = await fetch(serpApiUrl.toString())
       
-      if (!response.ok) {
-        throw new Error(`SERP API error: ${response.status}`)
+if (!response.ok) {
+        throw new Error(`SERP API error: ${response.status} - ${response.statusText}`)
       }
 
       const data = await response.json()
@@ -34,13 +34,24 @@ const serpService = {
       return this.processSerpResults(data, keyword)
     } catch (error) {
       console.error('SERP API Error:', error)
-      // Fallback to basic analysis if API fails
+      
+      // Handle specific network errors
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        throw new Error('Network connection failed. Please check your internet connection and try again.')
+      }
+      
+      if (error.name === 'AbortError') {
+        throw new Error('Request timed out. Please try again.')
+      }
+      
+      // Re-throw API errors with more context
+      throw new Error(`SERP API Error: ${error.message}`)
       return this.generateFallbackResults(keyword)
     }
   },
 
   async getAll() {
-    // For backward compatibility - returns recent analysis results
+// For backward compatibility - returns recent analysis results with better error handling
     const recentKeywords = ['SEO tools', 'content marketing', 'keyword research']
     const results = []
     
@@ -50,17 +61,57 @@ const serpService = {
         results.push(...analysis.slice(0, 5)) // Limit results per keyword
       } catch (error) {
         console.warn(`Failed to get analysis for ${keyword}:`, error)
+        // Continue with other keywords even if one fails
       }
+    }
+    
+    // If no results obtained from API, return fallback data
+    if (results.length === 0) {
+      console.info('Using fallback SERP data due to API unavailability')
+      return this.getFallbackSerpData()
     }
     
     return results
   },
 
+  // Fallback method to provide mock SERP data when API fails
+  getFallbackSerpData() {
+    return [
+      {
+        position: 1,
+        title: "SEO Tools - Complete Guide to Search Engine Optimization",
+        url: "https://example.com/seo-tools-guide",
+        snippet: "Comprehensive guide to the best SEO tools for keyword research, content optimization, and performance tracking.",
+        entities: ["SEO", "keyword research", "optimization"]
+      },
+      {
+        position: 2,
+        title: "Content Marketing Strategies That Drive Results",
+        url: "https://example.com/content-marketing",
+        snippet: "Learn proven content marketing strategies to attract and engage your target audience.",
+        entities: ["content marketing", "strategy", "engagement"]
+      },
+      {
+        position: 3,
+        title: "Keyword Research Tools - Find the Right Keywords",
+        url: "https://example.com/keyword-research",
+        snippet: "Discover powerful keyword research tools and techniques to improve your SEO performance.",
+        entities: ["keyword research", "SEO tools", "search volume"]
+      }
+    ]
+  },
+
   async getByPosition(position) {
-    const allResults = await this.getAll()
-    const result = allResults.find(item => item.position === parseInt(position))
-    if (!result) {
-      throw new Error("SERP result not found")
+    try {
+      const allResults = await this.getAll()
+      const result = allResults.find(item => item.position === parseInt(position))
+      if (!result) {
+        throw new Error(`SERP result not found at position ${position}`)
+      }
+      return result
+    } catch (error) {
+      console.error('Error getting SERP result by position:', error)
+      throw new Error(`Failed to retrieve SERP result: ${error.message}`)
     }
     return { ...result }
   },

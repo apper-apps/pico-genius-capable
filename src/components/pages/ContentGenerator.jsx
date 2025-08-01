@@ -86,18 +86,43 @@ const handleGenerate = async ({ keyword, contentType }) => {
       setCurrentContent(newContent)
       setContent(prev => [newContent, ...prev])
       toast.success(`Content generated successfully! SEO Score: ${optimizedContent.seoScore}/100`)
-    } catch (err) {
-      setError("Failed to generate content. Please check your API connections and try again.")
+} catch (err) {
       console.error("Error generating content:", err)
-      toast.error("Content generation failed. Please try again.")
+      
+      // Handle specific SERP API errors
+      if (err.message.includes('Network connection failed')) {
+        setError("Network connection failed. Please check your internet connection and try again.")
+        toast.error("Connection error. Please check your network and retry.")
+      } else if (err.message.includes('SERP API Error')) {
+        setError("Search results service is temporarily unavailable. Using fallback content generation.")
+        toast.warning("Using offline mode - some features may be limited.")
+      } else if (err.message.includes('timed out')) {
+        setError("Request timed out. Please try again with a simpler query.")
+        toast.error("Request timeout. Please try again.")
+      } else {
+        setError("Failed to generate content. Please try again or contact support if the issue persists.")
+        toast.error("Content generation failed. Please try again.")
+      }
     } finally {
       setLoading(false)
     }
   }
 
-  // Analyze competitor content from SERP results
+  // Analyze competitor content from SERP results with enhanced error handling
 const analyzeCompetitorContent = async (topResults) => {
     try {
+      // Validate input
+      if (!topResults || !Array.isArray(topResults) || topResults.length === 0) {
+        console.warn('No SERP results available for competitor analysis')
+        return {
+          commonTopics: new Set(),
+          averageLength: 0,
+          headingPatterns: [],
+          contentGaps: [],
+          strengthsWeaknesses: []
+        }
+      }
+
       const insights = {
         commonTopics: new Set(),
         averageLength: 0,

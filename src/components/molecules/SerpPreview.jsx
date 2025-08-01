@@ -1,21 +1,30 @@
-import React, { useState } from "react"
-import Card from "@/components/atoms/Card"
-import Badge from "@/components/atoms/Badge"
-import ApperIcon from "@/components/ApperIcon"
+import React, { useState } from "react";
+import ApperIcon from "@/components/ApperIcon";
+import Error from "@/components/ui/Error";
+import Badge from "@/components/atoms/Badge";
+import Card from "@/components/atoms/Card";
 
-const SerpPreview = ({ results, loading, className = "" }) => {
+const SerpPreview = ({ results = [], loading = false, error, className = "" }) => {
   const [showHeadingAnalysis, setShowHeadingAnalysis] = useState(false)
 
   const analyzeHeadingPatterns = (results) => {
+    if (!results || !Array.isArray(results) || results.length === 0) {
+      return []
+    }
+}
+    
     const patterns = new Map()
     results.forEach(result => {
-      const titleParts = result.title.split(/[-|:]/g).map(part => part.trim())
-      titleParts.forEach(part => {
-        if (part.length > 5) {
-          const pattern = part.toLowerCase().replace(/[^a-z\s]/g, '').trim()
-          patterns.set(pattern, (patterns.get(pattern) || 0) + 1)
-        }
-      })
+        const titleParts = result.title.split(/[-|:]/g).map(part => part.trim())
+        titleParts.forEach(part => {
+          if (part && part.length > 5) {
+            const pattern = part.toLowerCase().replace(/[^a-z\s]/g, '').trim()
+            if (pattern) {
+              patterns.set(pattern, (patterns.get(pattern) || 0) + 1)
+            }
+          }
+        })
+      }
     })
     
     return Array.from(patterns.entries())
@@ -39,6 +48,40 @@ const SerpPreview = ({ results, loading, className = "" }) => {
               <div className="skeleton h-3 w-full rounded"></div>
             </div>
           ))}
+        </div>
+      </Card>
+    )
+}
+
+  // Handle error state
+  if (error) {
+    return (
+      <Card className={`p-6 ${className}`}>
+        <div className="flex items-center mb-4">
+          <ApperIcon name="AlertCircle" className="w-5 h-5 text-red-400 mr-3" />
+          <h3 className="text-lg font-semibold text-white">SERP Preview - Error</h3>
+        </div>
+        <div className="text-center py-8">
+          <ApperIcon name="Wifi" className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-400 mb-2">Failed to load search results</p>
+          <p className="text-sm text-gray-500">{error}</p>
+        </div>
+      </Card>
+    )
+  }
+
+  // Handle empty results
+  if (!loading && (!results || results.length === 0)) {
+    return (
+      <Card className={`p-6 ${className}`}>
+        <div className="flex items-center mb-4">
+          <ApperIcon name="Globe" className="w-5 h-5 text-primary-400 mr-3" />
+          <h3 className="text-lg font-semibold text-white">SERP Preview</h3>
+        </div>
+        <div className="text-center py-8">
+          <ApperIcon name="Search" className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+          <p className="text-gray-400">No search results available</p>
+          <p className="text-sm text-gray-500">Try searching for a keyword to see SERP analysis</p>
         </div>
       </Card>
     )
@@ -86,31 +129,31 @@ return (
           </div>
         </div>
       )}
-      <div className="space-y-4">
+<div className="space-y-4">
         {results.map((result, index) => (
-          <div key={result.position} className="border-l-2 border-gray-700 pl-4 pb-4">
+          <div key={result?.position || index} className="border-l-2 border-gray-700 pl-4 pb-4">
             <div className="flex items-start justify-between mb-2">
               <div className="flex items-center space-x-2">
                 <Badge variant="secondary" size="small">
-                  #{result.position}
+                  #{result?.position || index + 1}
+#{result?.position || index + 1}
                 </Badge>
-                <span className="text-xs text-gray-500">{result.url}</span>
+                <span className="text-xs text-gray-500">{result?.url || 'No URL'}</span>
               </div>
             </div>
             
             <h4 className="text-blue-400 hover:text-blue-300 cursor-pointer mb-1 line-clamp-2">
-              {result.title}
+              {result?.title || 'No title available'}
             </h4>
             
             <p className="text-sm text-gray-400 line-clamp-3 leading-relaxed">
-              {result.snippet}
+              {result?.snippet || 'No snippet available'}
             </p>
-            
-            {result.entities && result.entities.length > 0 && (
+{result?.entities && Array.isArray(result.entities) && result.entities.length > 0 && (
               <div className="flex flex-wrap gap-1 mt-3">
                 {result.entities.slice(0, 3).map((entity, i) => (
                   <Badge key={i} variant="primary" size="small">
-                    {entity}
+                    {entity || 'Entity'}
                   </Badge>
                 ))}
                 {result.entities.length > 3 && (
