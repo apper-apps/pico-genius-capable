@@ -1,18 +1,18 @@
 // Real-time keyword research service with multiple data sources
 const keywordService = {
   // API configuration
-  apiConfig: {
+apiConfig: {
     keywordTool: {
       baseUrl: 'https://api.keywordtool.io/v2',
-      key: (typeof process !== 'undefined' && process.env?.VITE_KEYWORDTOOL_KEY) || 'demo_key'
+      key: import.meta.env.VITE_KEYWORDTOOL_KEY || 'demo_key'
     },
     semrush: {
       baseUrl: 'https://api.semrush.com',
-      key: (typeof process !== 'undefined' && process.env?.VITE_SEMRUSH_KEY) || 'demo_key'
+      key: import.meta.env.VITE_SEMRUSH_KEY || 'demo_key'
     },
     ubersuggest: {
       baseUrl: 'https://app.neilpatel.com/api',
-      key: (typeof process !== 'undefined' && process.env?.VITE_UBERSUGGEST_KEY) || 'demo_key'
+      key: import.meta.env.VITE_UBERSUGGEST_KEY || 'demo_key'
     }
   },
 
