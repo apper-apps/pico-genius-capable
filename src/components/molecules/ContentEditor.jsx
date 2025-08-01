@@ -57,6 +57,54 @@ const highlightEntities = (text) => {
       )
     })
     return highlightedText
+}
+
+  // Helper functions for heading structure display
+  const detectHeadingLevel = (heading) => {
+    if (heading.match(/^(H1:|# )/)) return 'H1'
+    if (heading.match(/^(H2:|## )/)) return 'H2'
+    if (heading.match(/^(H3:|### )/)) return 'H3'
+    
+    // Detect by content patterns
+    if (heading.match(/^(introduction|conclusion|overview|summary)/i)) return 'H1'
+    if (heading.match(/^(step|part|chapter|\d+\.)/i)) return 'H2'
+    return 'H3'
+  }
+
+  const getHeadingIndent = (level) => {
+    switch (level) {
+      case 'H1': return 'ml-0'
+      case 'H2': return 'ml-4'
+      case 'H3': return 'ml-8'
+      default: return 'ml-4'
+    }
+  }
+
+  const getHeadingIcon = (level) => {
+    switch (level) {
+      case 'H1': return 'Hash'
+      case 'H2': return 'ChevronRight'
+      case 'H3': return 'Minus'
+      default: return 'ChevronRight'
+    }
+  }
+
+  const getHeadingIconSize = (level) => {
+    switch (level) {
+      case 'H1': return 'w-5 h-5'
+      case 'H2': return 'w-4 h-4'
+      case 'H3': return 'w-3 h-3'
+      default: return 'w-4 h-4'
+    }
+  }
+
+  const getHeadingTextSize = (level) => {
+    switch (level) {
+      case 'H1': return 'text-base'
+      case 'H2': return 'text-sm'
+      case 'H3': return 'text-xs'
+      default: return 'text-sm'
+    }
   }
 
   const renderTabContent = () => {
@@ -87,18 +135,37 @@ switch (activeTab) {
           </div>
         )
 
-      case "structure":
+case "structure":
         return (
           <div>
             <h4 className="text-lg font-semibold text-white mb-4">Content Structure</h4>
-            <ul className="space-y-2">
-              {content.headings?.map((heading, index) => (
-                <li key={index} className="text-gray-300 flex items-center">
-                  <ApperIcon name="ChevronRight" className="w-4 h-4 mr-2 text-primary-400" />
-                  {heading}
-                </li>
-              )) || <p className="text-gray-400">No structure available yet.</p>}
-            </ul>
+            <div className="space-y-3">
+              {content.headings?.map((heading, index) => {
+                const level = detectHeadingLevel(heading)
+                const indent = getHeadingIndent(level)
+                const iconSize = getHeadingIconSize(level)
+                const textSize = getHeadingTextSize(level)
+                
+                return (
+                  <div key={index} className={`flex items-center ${indent}`}>
+                    <div className="flex items-center min-w-0 flex-1">
+                      <ApperIcon 
+                        name={getHeadingIcon(level)} 
+                        className={`${iconSize} mr-3 text-primary-400 flex-shrink-0`} 
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className={`text-gray-300 ${textSize} font-medium`}>
+                          {heading}
+                        </span>
+                        <div className="text-xs text-gray-500 mt-1">
+                          {level}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )
+              }) || <p className="text-gray-400">No structure available yet.</p>}
+            </div>
           </div>
         )
 

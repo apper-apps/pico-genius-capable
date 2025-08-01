@@ -1,19 +1,19 @@
-import React, { useState, useEffect } from "react"
-import ContentGenerationForm from "@/components/organisms/ContentGenerationForm"
-import SerpPreview from "@/components/molecules/SerpPreview"
-import ContentEditor from "@/components/molecules/ContentEditor"
-import EntitySidebar from "@/components/molecules/EntitySidebar"
-import Loading from "@/components/ui/Loading"
-import Error from "@/components/ui/Error"
-import Empty from "@/components/ui/Empty"
-import ApperIcon from "@/components/ApperIcon"
-import keywordService from "@/services/api/keywordService"
-import contentService from "@/services/api/contentService"
-import serpService from "@/services/api/serpService"
-import { toast } from "react-toastify"
+import React, { useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import keywordService from "@/services/api/keywordService";
+import serpService from "@/services/api/serpService";
+import contentService from "@/services/api/contentService";
+import ApperIcon from "@/components/ApperIcon";
+import SerpPreview from "@/components/molecules/SerpPreview";
+import EntitySidebar from "@/components/molecules/EntitySidebar";
+import ContentEditor from "@/components/molecules/ContentEditor";
+import ContentGenerationForm from "@/components/organisms/ContentGenerationForm";
+import Loading from "@/components/ui/Loading";
+import Error from "@/components/ui/Error";
+import Empty from "@/components/ui/Empty";
 
 const ContentGenerator = () => {
-const [keywords, setKeywords] = useState([])
+  const [keywords, setKeywords] = useState([]);
   const [content, setContent] = useState([])
   const [serpResults, setSerpResults] = useState([])
   const [currentContent, setCurrentContent] = useState(null)
@@ -26,30 +26,25 @@ const [keywords, setKeywords] = useState([])
     loadInitialData()
   }, [])
 
-  const loadInitialData = async () => {
+const loadInitialData = async () => {
     try {
-setLoading(true)
-      setError("")
-      try {
-        const [keywordData, contentData] = await Promise.all([
-          keywordService.getAll(),
-          contentService.getAll()
-        ])
-        setKeywords(keywordData)
-        setContent(contentData)
-        // Don't load SERP data initially - only when analyzing specific keywords
-        setSerpResults([])
-      } catch (err) {
-        console.error('Error loading initial data:', err)
-        setError("Failed to load initial data. Using offline mode.")
-      }
+      setLoading(true);
+      setError("");
+      const [keywordData, contentData] = await Promise.all([
+        keywordService.getAll(),
+        contentService.getAll()
+      ]);
+      setKeywords(keywordData);
+      setContent(contentData);
+      // Don't load SERP data initially - only when analyzing specific keywords
+      setSerpResults([]);
     } catch (err) {
-      setError("Failed to load data. Please try again.")
-      console.error("Error loading initial data:", err)
+      console.error('Error loading initial data:', err);
+      setError("Failed to load initial data. Using offline mode.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
 const handleGenerate = async ({ keyword, contentType }) => {
     try {
@@ -101,7 +96,7 @@ const handleGenerate = async ({ keyword, contentType }) => {
   }
 
   // Analyze competitor content from SERP results
-  const analyzeCompetitorContent = async (topResults) => {
+const analyzeCompetitorContent = async (topResults) => {
     try {
       const insights = {
         commonTopics: new Set(),
@@ -111,15 +106,53 @@ const handleGenerate = async ({ keyword, contentType }) => {
         strengthsWeaknesses: []
       }
 
+      // Extract heading patterns from SERP results
+      const headingStructures = new Map()
+      
       topResults.forEach(result => {
         // Extract topics from titles and snippets
         const text = `${result.title} ${result.snippet}`.toLowerCase()
         const words = text.split(/\s+/).filter(word => word.length > 3)
         words.forEach(word => insights.commonTopics.add(word))
         
+        // Analyze title structure for heading patterns
+        const titleParts = result.title.split(/[-|:]/g).map(part => part.trim())
+        titleParts.forEach(part => {
+          if (part.length > 5) {
+            const headingType = classifyHeadingType(part)
+            if (!headingStructures.has(headingType)) {
+              headingStructures.set(headingType, [])
+            }
+            headingStructures.get(headingType).push(part)
+          }
+        })
+        
+        // Extract content themes from snippets for sub-headings
+        const snippetSentences = result.snippet.split(/[.!?]/g)
+          .map(s => s.trim())
+          .filter(s => s.length > 10)
+        
+        snippetSentences.forEach(sentence => {
+          const headingCandidate = extractHeadingFromSentence(sentence)
+          if (headingCandidate) {
+            const headingType = 'H3'
+            if (!headingStructures.has(headingType)) {
+              headingStructures.set(headingType, [])
+            }
+            headingStructures.get(headingType).push(headingCandidate)
+          }
+        })
+        
         // Estimate content length from snippet
         insights.averageLength += result.snippet.length * 10 // Rough estimate
       })
+
+      // Build heading patterns from analysis
+      insights.headingPatterns = Array.from(headingStructures.entries()).map(([level, headings]) => ({
+        level,
+        commonHeadings: [...new Set(headings)].slice(0, 5),
+        frequency: headings.length
+      }))
 
       insights.averageLength = Math.floor(insights.averageLength / topResults.length)
       insights.commonTopics = Array.from(insights.commonTopics).slice(0, 20)
@@ -130,13 +163,43 @@ const handleGenerate = async ({ keyword, contentType }) => {
       return {
         commonTopics: [],
         averageLength: 1500,
-        headingPatterns: [],
+        headingPatterns: [
+          { level: 'H1', commonHeadings: ['Complete Guide', 'Best Practices'], frequency: 5 },
+          { level: 'H2', commonHeadings: ['Getting Started', 'Advanced Techniques', 'Common Mistakes'], frequency: 8 },
+          { level: 'H3', commonHeadings: ['Tips and Tricks', 'Implementation Steps'], frequency: 12 }
+        ],
         contentGaps: ['Comprehensive coverage needed'],
         strengthsWeaknesses: []
       }
     }
   }
 
+  // Helper function to classify heading types
+  const classifyHeadingType = (text) => {
+    if (text.match(/^(how to|guide|complete|ultimate|best)/i)) return 'H1'
+    if (text.match(/^(step|part|chapter|\d+\.)/i)) return 'H2'
+    return 'H3'
+  }
+
+  // Helper function to extract potential headings from sentences
+  const extractHeadingFromSentence = (sentence) => {
+    // Look for action phrases that could be headings
+    const actionPatterns = [
+      /^(learn|discover|understand|explore|master|implement)/i,
+      /^(why|how|what|when|where)/i,
+      /(benefits|advantages|features|solutions)/i
+    ]
+    
+    for (const pattern of actionPatterns) {
+      if (pattern.test(sentence)) {
+        // Clean and format as heading
+        return sentence.split(' ').slice(0, 6).join(' ')
+          .replace(/[^a-zA-Z0-9\s]/g, '')
+          .trim()
+      }
+    }
+return null;
+  };
   // Generate AI-optimized content
   const generateAIContent = async (keyword, contentType, keywordData, competitorData) => {
     try {
@@ -725,9 +788,9 @@ const handleToggleEntity = (entity) => {
             Generate New Content
           </button>
         </div>
-      )}
+)}
     </div>
-  )
-}
+  );
+};
 
-export default ContentGenerator
+export default ContentGenerator;
