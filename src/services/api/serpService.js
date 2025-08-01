@@ -17,74 +17,107 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
     try {
       // Create AbortController for timeout handling
       const controller = new AbortController();
-const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
 
       try {
         // Use SerpAPI for real-time SERP data
-const serpApiUrl = new URL(this.apiConfig.serpapi.baseUrl);
-serpApiUrl.searchParams.append('q', keyword);
+        const serpApiUrl = new URL(this.apiConfig.serpapi.baseUrl);
+        serpApiUrl.searchParams.append('q', keyword);
         serpApiUrl.searchParams.append('api_key', this.apiConfig.serpapi.key);
         serpApiUrl.searchParams.append('location', location);
         serpApiUrl.searchParams.append('hl', language);
         serpApiUrl.searchParams.append('num', '20');
 
+        console.log(`Attempting SERP API request for keyword: "${keyword}"`);
+        
         const response = await fetch(serpApiUrl.toString(), {
           signal: controller.signal,
           headers: {
             'Accept': 'application/json',
             'User-Agent': 'SEO-Genius/1.0'
-}
+          }
         });
         
         clearTimeout(timeoutId);
         
-if (!response.ok) {
-          throw new Error(`SERP API error: ${response.status} - ${response.statusText}`);
+        if (!response.ok) {
+          const errorDetail = `HTTP ${response.status} - ${response.statusText}`;
+          console.error(`SERP API HTTP Error: ${errorDetail}`);
+          throw new Error(`SERP API error: ${errorDetail}`);
         }
 
-const data = await response.json();
+        const data = await response.json();
+        console.log(`SERP API request successful for keyword: "${keyword}"`);
         
         return this.processSerpResults(data, keyword);
       } catch (fetchError) {
         clearTimeout(timeoutId);
+        
+        // Enhanced error logging with context
+        console.error('SERP API Fetch Error Details:', {
+          keyword,
+          error: fetchError.message,
+          type: fetchError.name,
+          stack: fetchError.stack
+        });
+        
         throw fetchError;
       }
-} catch (error) {
+    } catch (error) {
       console.error('SERP API Error:', error);
-      // Handle specific error types with better messaging
-if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
-        console.warn('CORS/Network error detected, falling back to mock data');
-        // Fall back to mock data for development/demo purposes
+      
+      // Handle specific error types with enhanced messaging
+      if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+        const errorMsg = 'Network connection failed - unable to reach SERP API servers. This could be due to CORS policy, network connectivity issues, or blocked requests.';
+        console.warn(errorMsg, 'Falling back to mock data for demo purposes');
+        
+        // Enhanced fallback with user context
+        if (import.meta.env.DEV) {
+          console.info('Development mode: Using mock SERP data for offline development');
+        }
+        
         return this.getFallbackSerpData(keyword);
       }
       
-if (error.name === 'AbortError') {
-        throw new Error('Request timed out. The SERP API is taking too long to respond. Please try again.');
+      if (error.name === 'AbortError') {
+        const timeoutMsg = 'Request timed out after 10 seconds. The SERP API servers may be experiencing high load or connectivity issues.';
+        console.warn(timeoutMsg);
+        throw new Error(timeoutMsg + ' Please try again or contact support if the issue persists.');
       }
       
-if (error.message.includes('CORS')) {
-        console.warn('CORS policy violation, using fallback data');
+      // Enhanced CORS detection
+      if (error.message.includes('CORS') || 
+          error.message.includes('Cross-Origin') ||
+          (error.name === 'TypeError' && error.message.includes('fetch'))) {
+        const corsMsg = 'CORS policy violation detected - browser is blocking the request to SERP API';
+        console.warn(corsMsg, 'Using fallback data for demonstration');
         return this.getFallbackSerpData(keyword);
       }
       
-      // Handle API rate limiting
-if (error.message.includes('429') || error.message.includes('rate limit')) {
-        throw new Error('API rate limit exceeded. Please wait a moment and try again.');
+      // Handle API rate limiting with better context
+      if (error.message.includes('429') || error.message.includes('rate limit')) {
+        const rateLimitMsg = 'SERP API rate limit exceeded. You have made too many requests in a short time period.';
+        console.warn(rateLimitMsg);
+        throw new Error(rateLimitMsg + ' Please wait 60 seconds before trying again.');
       }
       
-      // Handle authentication errors
-if (error.message.includes('401') || error.message.includes('403')) {
-        throw new Error('API authentication failed. Please check your API configuration.');
+      // Handle authentication errors with actionable advice
+      if (error.message.includes('401') || error.message.includes('403')) {
+        const authMsg = 'SERP API authentication failed. Invalid or missing API key.';
+        console.error(authMsg);
+        throw new Error(authMsg + ' Please verify your API configuration in the service settings.');
       }
       
-// For development: fall back to mock data on any API error
+      // Enhanced development fallback
       if (import.meta.env.DEV) {
-        console.warn('Development mode: falling back to mock data due to API error');
+        console.warn('Development mode: Falling back to mock data due to API error:', error.message);
         return this.getFallbackSerpData(keyword);
       }
       
-// Re-throw API errors with more context
-      throw new Error(`SERP API Error: ${error.message}. Using offline mode.`);
+      // Production error with enhanced context
+      const productionError = `SERP API Error: ${error.message}. The search results service is temporarily unavailable.`;
+      console.error(productionError);
+      throw new Error(productionError + ' Please try again later or contact support if the issue persists.');
     }
   },
 // Fallback method to provide mock SERP data

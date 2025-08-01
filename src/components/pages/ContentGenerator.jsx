@@ -86,14 +86,25 @@ const handleGenerate = async ({ keyword, contentType }) => {
 setCurrentContent(newContent)
       setContent(prev => [newContent, ...prev])
       toast.success(`Content generated successfully! SEO Score: ${optimizedContent.seoScore}/100`)
-    } catch (err) {
+} catch (err) {
       console.error("Error generating content:", err)
       
-      // Handle specific SERP API errors with enhanced messaging
-      if (err.message.includes('Network connection failed') || err.message.includes('Failed to fetch')) {
-        setError("Network connection failed. Please check your internet connection and try again.")
-        toast.error("Connection error. Please check your network and retry.")
-        // Still try to generate content with fallback data
+      const errorMsg = err?.message || 'Unknown error occurred';
+      const errorLower = errorMsg.toLowerCase();
+      
+      // Enhanced error categorization with specific handling
+      if (errorLower.includes('network connection failed') || 
+          errorLower.includes('failed to fetch') ||
+          errorLower.includes('cors policy')) {
+        
+        const networkErrorMsg = errorLower.includes('cors') 
+          ? "CORS policy is blocking the request. Using offline mode for demonstration."
+          : "Network connection failed. Please check your internet connection and try again.";
+        
+        setError(networkErrorMsg)
+        toast.error("Connection error. Switching to offline mode.")
+        
+        // Enhanced fallback with better error recovery
         try {
           setSerpLoading(false)
           const fallbackContent = await generateFallbackContent(keyword, contentType, { 
@@ -118,30 +129,55 @@ setCurrentContent(newContent)
           
           setCurrentContent(newContent)
           setContent(prev => [newContent, ...prev])
-          toast.info(`Content generated in offline mode! SEO Score: ${fallbackContent.seoScore}/100`)
+          toast.success(`Content generated in offline mode! SEO Score: ${fallbackContent.seoScore}/100`)
         } catch (fallbackError) {
           console.error('Fallback content generation failed:', fallbackError)
+          toast.error("Unable to generate content even in offline mode. Please refresh and try again.")
         }
-      } else if (err.message.includes('SERP API Error') || err.message.includes('Using offline mode')) {
-        setError("Search results service is temporarily unavailable. Using fallback content generation.")
-        toast.warning("Using offline mode - some features may be limited.")
+        
+      } else if (errorLower.includes('serp api error') || errorLower.includes('using offline mode')) {
+        setError("Search results service is temporarily unavailable. Content generated using cached analysis.")
+        toast.warning("SERP API unavailable - using enhanced offline analysis.")
         setSerpLoading(false)
-      } else if (err.message.includes('timed out') || err.message.includes('timeout')) {
-        setError("Request timed out. Please try again with a simpler query.")
-        toast.error("Request timeout. Please try again.")
+        
+      } else if (errorLower.includes('timed out') || errorLower.includes('timeout') || errorLower.includes('10 seconds')) {
+        const timeoutMsg = errorLower.includes('10 seconds')
+          ? "Request timed out after 10 seconds. The API servers may be experiencing high load."
+          : "Request timed out. Please try again with a simpler query.";
+        setError(timeoutMsg)
+        toast.error("Request timeout. Please try again in a few moments.")
         setSerpLoading(false)
-      } else if (err.message.includes('rate limit')) {
-        setError("API rate limit exceeded. Please wait a moment before trying again.")
-        toast.error("Too many requests. Please wait a moment and retry.")
+        
+      } else if (errorLower.includes('rate limit') || errorLower.includes('429')) {
+        setError("API rate limit exceeded. You've made too many requests. Please wait 60 seconds before trying again.")
+        toast.error("Rate limit exceeded. Please wait 1 minute before retrying.")
         setSerpLoading(false)
-      } else if (err.message.includes('authentication')) {
-        setError("API authentication failed. Please check your configuration.")
-        toast.error("Authentication error. Please contact support.")
+        
+      } else if (errorLower.includes('authentication') || errorLower.includes('401') || errorLower.includes('403')) {
+        setError("API authentication failed. Invalid or missing API key. Please check your service configuration.")
+        toast.error("Authentication error. Please verify your API settings.")
         setSerpLoading(false)
+        
+      } else if (errorLower.includes('unavailable') || errorLower.includes('service')) {
+        setError("Search results service is temporarily unavailable. Please try again later.")
+        toast.warning("Service temporarily unavailable. Using fallback mode.")
+        setSerpLoading(false)
+        
       } else {
-        setError("Failed to generate content. Please try again or contact support if the issue persists.")
-        toast.error("Content generation failed. Please try again.")
+        // Generic error with enhanced context
+        const genericMsg = "Content generation encountered an unexpected error. This may be due to network issues or service limitations.";
+        setError(genericMsg + " Please try again or contact support if the issue persists.")
+        toast.error("Unexpected error occurred. Please try again.")
         setSerpLoading(false)
+        
+        // Log detailed error for debugging
+        console.error('Unhandled content generation error:', {
+          message: errorMsg,
+          type: err?.name,
+          stack: err?.stack,
+          keyword,
+          contentType
+        });
       }
     } finally {
       setLoading(false)

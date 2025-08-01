@@ -52,52 +52,126 @@ const analyzeHeadingPatterns = (results) => {
 }
 
 // Handle error state with enhanced messaging
-  if (error) {
-    const isNetworkError = error.includes('Network connection failed') || error.includes('Failed to fetch')
-    const isTimeoutError = error.includes('timed out') || error.includes('timeout')
-    const isOfflineMode = error.includes('offline mode') || error.includes('Using offline mode')
+if (error) {
+    const errorLower = error?.toLowerCase() || '';
+    const isNetworkError = errorLower.includes('network connection failed') || 
+                          errorLower.includes('failed to fetch') ||
+                          errorLower.includes('cors policy')
+    const isTimeoutError = errorLower.includes('timed out') || 
+                          errorLower.includes('timeout') ||
+                          errorLower.includes('10 seconds')
+    const isOfflineMode = errorLower.includes('offline mode') || 
+                         errorLower.includes('using offline mode') ||
+                         errorLower.includes('demonstration')
+    const isCORSError = errorLower.includes('cors') || errorLower.includes('cross-origin')
+    const isRateLimitError = errorLower.includes('rate limit') || errorLower.includes('429')
+    const isAuthError = errorLower.includes('authentication') || errorLower.includes('401') || errorLower.includes('403')
+    
+    // Determine primary error type for better UX
+    let errorType = 'unknown';
+    let iconName = 'AlertCircle';
+    let title = 'Connection Issue';
+    let description = 'Failed to load search results';
+    let actionText = 'Retry Connection';
+    
+    if (isNetworkError || isCORSError) {
+      errorType = 'network';
+      iconName = 'WifiOff';
+      title = 'Network Connection Error';
+      description = isCORSError ? 'Browser security policy is blocking the request' : 'Unable to connect to search servers';
+    } else if (isTimeoutError) {
+      errorType = 'timeout';
+      iconName = 'Clock';
+      title = 'Request Timeout';
+      description = 'The search request is taking too long to complete';
+    } else if (isOfflineMode) {
+      errorType = 'offline';
+      iconName = 'Database';
+      title = 'Offline Mode';
+      description = 'Using demonstration data';
+      actionText = 'View Demo Data';
+    } else if (isRateLimitError) {
+      errorType = 'rateLimit';
+      iconName = 'Clock';
+      title = 'Rate Limited';
+      description = 'Too many requests - please wait before trying again';
+    } else if (isAuthError) {
+      errorType = 'auth';
+      iconName = 'Key';
+      title = 'Authentication Error';
+      description = 'API configuration issue detected';
+    }
     
     return (
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center mb-4">
           <ApperIcon 
-            name={isNetworkError ? "WifiOff" : isTimeoutError ? "Clock" : "AlertCircle"} 
+            name={iconName} 
             className="w-5 h-5 text-red-400 mr-3" 
           />
           <h3 className="text-lg font-semibold text-white">
-            SERP Preview - {isOfflineMode ? 'Offline Mode' : 'Connection Issue'}
+            SERP Preview - {title}
           </h3>
         </div>
         <div className="text-center py-8">
           <ApperIcon 
-            name={isNetworkError ? "WifiOff" : isTimeoutError ? "Clock" : "AlertTriangle"} 
+            name={iconName} 
             className="w-12 h-12 text-gray-600 mx-auto mb-4" 
           />
-          <p className="text-gray-400 mb-2">
-            {isNetworkError ? 'Connection Error' : 
-             isTimeoutError ? 'Request Timeout' : 
-             isOfflineMode ? 'Using Offline Data' : 'Failed to load search results'}
-          </p>
+          <p className="text-gray-400 mb-2">{description}</p>
           <p className="text-sm text-gray-500 mb-4">{error}</p>
           
-          {(isNetworkError || isTimeoutError) && (
+          {/* Network/Timeout specific guidance */}
+          {(errorType === 'network' || errorType === 'timeout') && (
             <div className="space-y-2">
               <p className="text-xs text-gray-600">
-                {isNetworkError ? 'Check your internet connection and try again' : 'The request is taking too long. Please try again.'}
+                {errorType === 'network' 
+                  ? 'Check your internet connection and firewall settings' 
+                  : 'Server may be experiencing high load. Please try again.'}
               </p>
               <button
                 onClick={() => window.location.reload()}
                 className="text-primary-400 hover:text-primary-300 text-sm font-medium underline"
               >
-                Retry Connection
+                {actionText}
               </button>
             </div>
           )}
           
-          {isOfflineMode && (
-            <p className="text-xs text-gray-600">
-              Using cached data for demonstration purposes
-            </p>
+          {/* Rate limit specific guidance */}
+          {errorType === 'rateLimit' && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">
+                Please wait 60 seconds before making another request
+              </p>
+              <div className="text-xs text-gray-500">
+                Consider upgrading your API plan for higher limits
+              </div>
+            </div>
+          )}
+          
+          {/* Auth error guidance */}
+          {errorType === 'auth' && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">
+                Please check your API key configuration
+              </p>
+              <div className="text-xs text-gray-500">
+                Contact support if the issue persists
+              </div>
+            </div>
+          )}
+          
+          {/* Offline mode info */}
+          {errorType === 'offline' && (
+            <div className="space-y-2">
+              <p className="text-xs text-gray-600">
+                Using cached data for demonstration purposes
+              </p>
+              <div className="text-xs text-gray-500">
+                Real API integration available in production
+              </div>
+            </div>
           )}
         </div>
       </Card>
