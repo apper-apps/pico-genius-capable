@@ -154,8 +154,8 @@ if (error) {
             name={iconName} 
             className="w-12 h-12 text-gray-600 mx-auto mb-4" 
 />
-          <p className="text-gray-400 mb-2">{description}</p>
-          <p className="text-sm text-gray-500 mb-4">{errorMessage}</p>
+<p className="text-gray-400 mb-2">{description}</p>
+          <p className="text-sm text-gray-500 mb-4">{processedErrorMessage}</p>
           
           {/* Network/Timeout specific guidance */}
           {(errorType === 'network' || errorType === 'timeout') && (
