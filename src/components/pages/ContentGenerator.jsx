@@ -96,7 +96,7 @@ setCurrentContent(newContent)
       });
       
       // Safely extract error message with multiple fallbacks
-      let errorMsg = 'Unknown error occurred during content generation';
+let errorMsg = 'Unknown error occurred during content generation';
       if (typeof err === 'string') {
         errorMsg = err;
       } else if (err?.message && typeof err.message === 'string') {
@@ -107,6 +107,28 @@ setCurrentContent(newContent)
         const stringified = err.toString();
         if (stringified !== '[object Object]') {
           errorMsg = stringified;
+        } else {
+          // Enhanced fallback for objects that stringify to "[object Object]"
+          try {
+            const jsonString = JSON.stringify(err);
+            if (jsonString && jsonString !== '{}') {
+              errorMsg = `Content generation error: ${jsonString}`;
+            } else if (err?.name || err?.code || err?.status) {
+              errorMsg = `Content generation error: ${err.name || 'Unknown'} ${err.code || err.status || ''}`.trim();
+            }
+          } catch (jsonError) {
+            errorMsg = 'Content generation encountered an unexpected error format';
+          }
+        }
+      } else if (err && typeof err === 'object') {
+        // Direct object handling as final fallback
+        try {
+          const jsonString = JSON.stringify(err);
+          if (jsonString && jsonString !== '{}') {
+            errorMsg = `Content generation error: ${jsonString}`;
+          }
+        } catch (jsonError) {
+          errorMsg = 'Content generation encountered a complex error object';
         }
       }
       

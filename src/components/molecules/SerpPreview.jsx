@@ -53,19 +53,44 @@ const analyzeHeadingPatterns = (results) => {
 
 // Handle error state with enhanced messaging
 if (error) {
-    // Safely extract error message from various formats
-    let errorMessage = '';
+    // Enhanced error message extraction to prevent "[object Object]" display
+    let processedErrorMessage = '';
     if (typeof error === 'string') {
-      errorMessage = error;
-    } else if (error?.message) {
-      errorMessage = error.message;
-    } else if (error?.error) {
-      errorMessage = error.error;
+      processedErrorMessage = error;
+    } else if (error?.message && typeof error.message === 'string') {
+      processedErrorMessage = error.message;
+    } else if (error?.error && typeof error.error === 'string') {
+      processedErrorMessage = error.error;
+    } else if (typeof error === 'object' && error !== null && !Array.isArray(error)) {
+      if (error.toString && typeof error.toString === 'function') {
+        const stringified = error.toString();
+        if (stringified !== '[object Object]') {
+          processedErrorMessage = stringified;
+        } else {
+          try {
+            const jsonString = JSON.stringify(error);
+            if (jsonString && jsonString !== '{}') {
+              processedErrorMessage = `SERP API Error: ${jsonString}`;
+            } else {
+              processedErrorMessage = `SERP API Error: ${error.name || error.code || error.status || 'Unknown error format'}`;
+            }
+          } catch (jsonError) {
+            processedErrorMessage = 'SERP API encountered an unexpected error format';
+          }
+        }
+      } else {
+        try {
+          const jsonString = JSON.stringify(error);
+          processedErrorMessage = jsonString && jsonString !== '{}' ? `SERP API Error: ${jsonString}` : 'SERP API error object could not be processed';
+        } catch (jsonError) {
+          processedErrorMessage = 'SERP API encountered a complex error object';
+        }
+      }
     } else {
-      errorMessage = 'Unknown error occurred while fetching SERP data';
+      processedErrorMessage = 'Unknown error occurred while fetching SERP data';
     }
     
-    const errorLower = errorMessage.toLowerCase();
+    const errorLower = processedErrorMessage.toLowerCase();
     const isNetworkError = errorLower.includes('network connection failed') || 
                           errorLower.includes('failed to fetch') ||
                           errorLower.includes('cors policy')
@@ -113,7 +138,6 @@ if (error) {
       title = 'Authentication Error';
       description = 'API configuration issue detected';
     }
-    
     return (
       <Card className={`p-6 ${className}`}>
         <div className="flex items-center mb-4">
