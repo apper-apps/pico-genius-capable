@@ -1,3 +1,5 @@
+import React from "react";
+import Error from "@/components/ui/Error";
 // Real-time SERP data service using multiple API providers
 const serpService = {
   // Primary API endpoints - can be configured via environment
@@ -53,38 +55,38 @@ async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
 } catch (fetchError) {
         clearTimeout(timeoutId);
         
-        // Enhanced error logging with proper serialization
-        console.error('SERP API Fetch Error Details:', {
+        // Enhanced error logging with proper serialization - avoid circular references
+        const errorDetails = {
           keyword,
-          error: fetchError?.message || 'Unknown fetch error',
-          type: fetchError?.name || 'Error',
-          stack: fetchError?.stack || 'No stack trace available',
+          error: String(fetchError?.message || 'Unknown fetch error'),
+          type: String(fetchError?.name || 'Error'),
+          stack: fetchError?.stack ? String(fetchError.stack).substring(0, 500) : 'No stack trace available',
           timestamp: new Date().toISOString(),
-          url: fetchError?.url || 'Unknown URL'
-        });
-        
-        // Create a serializable error with meaningful message
-        const serializedError = new Error(
-          fetchError?.message || `SERP API request failed for keyword: ${keyword}`
-        );
-        serializedError.name = fetchError?.name || 'SerpApiError';
-        serializedError.originalError = {
-          message: fetchError?.message,
-          name: fetchError?.name,
-          stack: fetchError?.stack
+          url: String(fetchError?.url || 'Unknown URL')
         };
+        
+        console.error('SERP API Fetch Error Details:', errorDetails);
+        
+        // Create a clean, serializable error with meaningful message
+        const errorMessage = fetchError?.message 
+          ? String(fetchError.message)
+          : `SERP API request failed for keyword: ${keyword}`;
+          
+        const serializedError = new Error(errorMessage);
+        serializedError.name = String(fetchError?.name || 'SerpApiError');
+        serializedError.keyword = keyword;
+        serializedError.timestamp = new Date().toISOString();
         
         throw serializedError;
       }
     } catch (error) {
-      // Enhanced error logging with structured details
-      console.error('SERP API Error:', {
+      // Enhanced error logging with proper string serialization
+const errorInfo = {
         keyword,
-        message: error?.message || 'Unknown error',
-        name: error?.name || 'Error',
+        message: String(error?.message || 'Unknown error'),
+        name: String(error?.name || 'Error'),
         stack: error?.stack || 'No stack trace'
-      });
-      
+      };
       // Handle specific error types with enhanced messaging
       if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
         const errorMsg = 'Network connection failed - unable to reach SERP API servers. This could be due to CORS policy, network connectivity issues, or blocked requests.';
