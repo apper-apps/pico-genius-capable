@@ -1,385 +1,341 @@
-import React from "react";
-import Error from "@/components/ui/Error";
-// Real-time SERP data service using multiple API providers
 const serpService = {
-  // Primary API endpoints - can be configured via environment
   apiConfig: {
     serpapi: {
-      baseUrl: 'https://serpapi.com/search',
-      key: import.meta.env.VITE_SERPAPI_KEY || 'demo_key'
+      apiKey: import.meta.env.VITE_SERPAPI_KEY || null,
+      baseUrl: 'https://serpapi.com/search.json'
     },
     dataforseo: {
-      baseUrl: 'https://api.dataforseo.com/v3/serp/google/organic/live/advanced',
-      username: import.meta.env.VITE_DATAFORSEO_USER || 'demo@example.com',
-      password: import.meta.env.VITE_DATAFORSEO_PASS || 'demo_pass'
+      login: import.meta.env.VITE_DATAFORSEO_LOGIN || null,
+      password: import.meta.env.VITE_DATAFORSEO_PASSWORD || null,
+      baseUrl: 'https://api.dataforseo.com/v3'
     }
   },
 
-async getKeywordAnalysis(keyword, location = 'United States', language = 'en') {
+  // Main method to get keyword analysis with SERP results
+  async getKeywordAnalysis(keyword) {
     try {
-      // Create AbortController for timeout handling
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000); // 10 second timeout
-
-      try {
-        // Use SerpAPI for real-time SERP data
-        const serpApiUrl = new URL(this.apiConfig.serpapi.baseUrl);
-        serpApiUrl.searchParams.append('q', keyword);
-        serpApiUrl.searchParams.append('api_key', this.apiConfig.serpapi.key);
-        serpApiUrl.searchParams.append('location', location);
-        serpApiUrl.searchParams.append('hl', language);
-        serpApiUrl.searchParams.append('num', '20');
-
-        console.log(`Attempting SERP API request for keyword: "${keyword}"`);
-        
-        const response = await fetch(serpApiUrl.toString(), {
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json',
-            'User-Agent': 'SEO-Genius/1.0'
-          }
-        });
-        
-        clearTimeout(timeoutId);
-        
-        if (!response.ok) {
-          const errorDetail = `HTTP ${response.status} - ${response.statusText}`;
-          console.error(`SERP API HTTP Error: ${errorDetail}`);
-          throw new Error(`SERP API error: ${errorDetail}`);
-        }
-
-        const data = await response.json();
-        console.log(`SERP API request successful for keyword: "${keyword}"`);
-        
-        return this.processSerpResults(data, keyword);
-} catch (fetchError) {
-        clearTimeout(timeoutId);
-        
-        // Enhanced error logging with proper serialization - avoid circular references
-        const errorDetails = {
-          keyword,
-          error: String(fetchError?.message || 'Unknown fetch error'),
-          type: String(fetchError?.name || 'Error'),
-          stack: fetchError?.stack ? String(fetchError.stack).substring(0, 500) : 'No stack trace available',
-          timestamp: new Date().toISOString(),
-          url: String(fetchError?.url || 'Unknown URL')
-        };
-        
-        console.error('SERP API Fetch Error Details:', errorDetails);
-        
-        // Create a clean, serializable error with meaningful message
-        const errorMessage = fetchError?.message 
-          ? String(fetchError.message)
-          : `SERP API request failed for keyword: ${keyword}`;
-          
-        const serializedError = new Error(errorMessage);
-        serializedError.name = String(fetchError?.name || 'SerpApiError');
-        serializedError.keyword = keyword;
-        serializedError.timestamp = new Date().toISOString();
-        
-        throw serializedError;
+      if (!keyword || typeof keyword !== 'string' || keyword.trim().length === 0) {
+        throw new Error('Invalid keyword provided')
       }
+
+      const cleanKeyword = keyword.trim()
+      
+      // Try multiple API providers in order of preference
+      const results = await this.fetchSerpResults(cleanKeyword)
+      
+      if (!results || results.length === 0) {
+        console.warn('No SERP results found, using fallback data')
+        return this.generateFallbackResults(cleanKeyword)
+      }
+
+      return results
     } catch (error) {
-      // Enhanced error logging with proper string serialization
-const errorInfo = {
-        keyword,
-        message: String(error?.message || 'Unknown error'),
-        name: String(error?.name || 'Error'),
-        stack: error?.stack || 'No stack trace'
-      };
-      // Handle specific error types with enhanced messaging
-      if (error?.name === 'TypeError' && error?.message?.includes('Failed to fetch')) {
-        const errorMsg = 'Network connection failed - unable to reach SERP API servers. This could be due to CORS policy, network connectivity issues, or blocked requests.';
-        console.warn(errorMsg, 'Falling back to mock data for demo purposes');
-        
-        // Enhanced fallback with user context
-        if (import.meta.env.DEV) {
-          console.info('Development mode: Using mock SERP data for offline development');
-        }
-        
-        return this.getFallbackSerpData(keyword);
-      }
+      console.error('SERP Analysis Error:', error)
       
-      if (error.name === 'AbortError') {
-        const timeoutMsg = 'Request timed out after 10 seconds. The SERP API servers may be experiencing high load or connectivity issues.';
-        console.warn(timeoutMsg);
-        throw new Error(timeoutMsg + ' Please try again or contact support if the issue persists.');
-      }
+      // Format the error message properly before throwing
+      const errorMessage = this.formatErrorMessage(error)
       
-      // Enhanced CORS detection
-      if (error.message.includes('CORS') || 
-          error.message.includes('Cross-Origin') ||
-          (error.name === 'TypeError' && error.message.includes('fetch'))) {
-        const corsMsg = 'CORS policy violation detected - browser is blocking the request to SERP API';
-        console.warn(corsMsg, 'Using fallback data for demonstration');
-        return this.getFallbackSerpData(keyword);
-      }
+      // Create a new error with the formatted message
+      const formattedError = new Error(errorMessage)
+      formattedError.originalError = error
+      formattedError.isApiError = true
       
-      // Handle API rate limiting with better context
-      if (error.message.includes('429') || error.message.includes('rate limit')) {
-        const rateLimitMsg = 'SERP API rate limit exceeded. You have made too many requests in a short time period.';
-        console.warn(rateLimitMsg);
-        throw new Error(rateLimitMsg + ' Please wait 60 seconds before trying again.');
-      }
-      
-      // Handle authentication errors with actionable advice
-      if (error.message.includes('401') || error.message.includes('403')) {
-        const authMsg = 'SERP API authentication failed. Invalid or missing API key.';
-        console.error(authMsg);
-        throw new Error(authMsg + ' Please verify your API configuration in the service settings.');
-      }
-      
-      // Enhanced development fallback
-      if (import.meta.env.DEV) {
-        console.warn('Development mode: Falling back to mock data due to API error:', error.message);
-        return this.getFallbackSerpData(keyword);
-      }
-      
-      // Production error with enhanced context
-      const productionError = `SERP API Error: ${error.message}. The search results service is temporarily unavailable.`;
-      console.error(productionError);
-      throw new Error(productionError + ' Please try again later or contact support if the issue persists.');
+      throw formattedError
     }
-  },
-// Fallback method to provide mock SERP data
-  async getFallbackSerpData(keyword) {
-    try {
-      // Import mock data dynamically
-      const mockDataModule = await import('@/services/mockData/serpResults.json');
-      const mockData = mockDataModule.default;
-      
-      // Customize mock data for the specific keyword
-      const customizedResults = mockData.map((result, index) => ({
-        ...result,
-        title: result.title.replace(/sample keyword/gi, keyword),
-        snippet: result.snippet.replace(/sample keyword/gi, keyword),
-        position: index + 1,
-url: result.url || `https://example.com/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
-        keyword: keyword
-      }));
-      
-      console.info(`Using fallback SERP data for keyword: ${keyword}`);
-      return customizedResults;
-} catch (mockError) {
-      console.error('Failed to load mock SERP data:', mockError);
-      
-      // Ultimate fallback: generate basic SERP results
-      return this.generateBasicSerpResults(keyword);
-    }
-  },
-generateBasicSerpResults(keyword) {
-    // Generate basic SERP results as last resort
-    const basicResults = [];
-    const domains = ['wikipedia.org', 'example.com', 'guide.com', 'howto.com', 'best-practices.org'];
-    
-    for (let i = 0; i < 10; i++) {
-      basicResults.push({
-        position: i + 1,
-        title: `${keyword} - Complete Guide ${i + 1}`,
-        snippet: `Learn everything about ${keyword} with this comprehensive guide. Discover best practices, tips, and strategies for ${keyword} success.`,
-        url: `https://${domains[i % domains.length]}/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
-entities: [keyword, 'guide', 'tips', 'strategies'],
-        keyword: keyword
-      });
-    }
-    
-    console.info(`Generated basic SERP results for keyword: ${keyword}`);
-    return basicResults;
   },
 
-async getAll() {
-    // For backward compatibility - returns recent analysis results with better error handling
-    const recentKeywords = ['SEO tools', 'content marketing', 'keyword research'];
-    const results = [];
+  async fetchSerpResults(keyword) {
+    const errors = []
     
-    for (const keyword of recentKeywords) {
-try {
-        const analysis = await this.getKeywordAnalysis(keyword);
-        results.push(...analysis.slice(0, 5)); // Limit results per keyword
+    // Try SerpAPI first
+    if (this.apiConfig.serpapi.apiKey) {
+      try {
+        const results = await this.fetchFromSerpAPI(keyword)
+        if (results && results.length > 0) return results
       } catch (error) {
-        console.warn(`Failed to get analysis for ${keyword}:`, error);
-        // Continue with other keywords even if one fails
+        errors.push(`SerpAPI: ${this.formatErrorMessage(error)}`)
       }
+    } else {
+      errors.push('SerpAPI: No API key configured')
     }
-    
-    // If no results obtained from API, return fallback data
-if (results.length === 0) {
-      console.info('Using fallback SERP data due to API unavailability');
-      return this.getFallbackSerpData();
+
+    // Try DataForSEO as fallback
+    if (this.apiConfig.dataforseo.login && this.apiConfig.dataforseo.password) {
+      try {
+        const results = await this.fetchFromDataForSEO(keyword)
+        if (results && results.length > 0) return results
+      } catch (error) {
+        errors.push(`DataForSEO: ${this.formatErrorMessage(error)}`)
+      }
+    } else {
+      errors.push('DataForSEO: No credentials configured')
     }
-    
-    return results;
+
+    // If all APIs failed, throw with detailed error message
+    const combinedErrorMsg = `SERP API services unavailable: ${errors.join('; ')}`
+    const combinedError = new Error(combinedErrorMsg)
+    combinedError.details = errors
+    combinedError.isApiError = true
+    throw combinedError
   },
 
-// Static fallback method to provide mock SERP data when API fails
-  getFallbackSerpData() {
-    return [
+  async fetchFromSerpAPI(keyword) {
+    try {
+      const params = new URLSearchParams({
+        q: keyword,
+        engine: 'google',
+        api_key: this.apiConfig.serpapi.apiKey,
+        num: 10,
+        gl: 'us',
+        hl: 'en'
+      })
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000) // 10 second timeout
+
+      const response = await fetch(`${this.apiConfig.serpapi.baseUrl}?${params}`, {
+        signal: controller.signal,
+        headers: {
+          'Accept': 'application/json',
+          'User-Agent': 'SEO-Genius/1.0'
+        }
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        const errorData = await this.safeParseJSON(response)
+        throw new Error(`SerpAPI HTTP ${response.status}: ${errorData?.error || response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.error) {
+        throw new Error(`SerpAPI Error: ${data.error}`)
+      }
+
+      return this.formatSerpResults(data.organic_results || [], 'serpapi')
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('SerpAPI request timed out after 10 seconds')
+      }
+      throw error
+    }
+  },
+
+  async fetchFromDataForSEO(keyword) {
+    try {
+      const auth = btoa(`${this.apiConfig.dataforseo.login}:${this.apiConfig.dataforseo.password}`)
+      
+      const payload = [{
+        language_code: 'en',
+        location_code: 2840, // United States
+        keyword: keyword,
+        device: 'desktop',
+        os: 'windows'
+      }]
+
+      const controller = new AbortController()
+      const timeoutId = setTimeout(() => controller.abort(), 10000)
+
+      const response = await fetch(`${this.apiConfig.dataforseo.baseUrl}/serp/google/organic/live/advanced`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Basic ${auth}`,
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      if (!response.ok) {
+        const errorData = await this.safeParseJSON(response)
+        throw new Error(`DataForSEO HTTP ${response.status}: ${errorData?.status_message || response.statusText}`)
+      }
+
+      const data = await response.json()
+      
+      if (data.status_code !== 20000) {
+        throw new Error(`DataForSEO API Error: ${data.status_message || 'Unknown error'}`)
+      }
+
+      const results = data.tasks?.[0]?.result?.[0]?.items || []
+      return this.formatSerpResults(results, 'dataforseo')
+    } catch (error) {
+      if (error.name === 'AbortError') {
+        throw new Error('DataForSEO request timed out after 10 seconds')
+      }
+      throw error
+    }
+  },
+
+  async safeParseJSON(response) {
+    try {
+      return await response.json()
+    } catch (error) {
+      console.warn('Failed to parse error response as JSON:', error)
+      return { error: 'Invalid JSON response from API' }
+    }
+  },
+
+  formatSerpResults(results, provider) {
+    if (!Array.isArray(results)) {
+      console.warn('Invalid results format from', provider)
+      return []
+    }
+
+    return results.slice(0, 10).map((result, index) => {
+      let title, url, snippet, displayUrl
+
+      if (provider === 'serpapi') {
+        title = result.title || 'No title'
+        url = result.link || '#'
+        snippet = result.snippet || 'No description available'
+        displayUrl = result.displayed_link || url
+      } else if (provider === 'dataforseo') {
+        title = result.title || 'No title'
+        url = result.url || '#'
+        snippet = result.description || 'No description available'
+        displayUrl = result.breadcrumb || url
+      }
+
+      return {
+        position: index + 1,
+        title: this.cleanText(title),
+        url: url,
+        displayUrl: this.cleanText(displayUrl),
+        snippet: this.cleanText(snippet),
+        provider: provider
+      }
+    })
+  },
+
+  cleanText(text) {
+    if (!text || typeof text !== 'string') return ''
+    return text.replace(/\n+/g, ' ').replace(/\s+/g, ' ').trim()
+  },
+
+  generateFallbackResults(keyword) {
+    const fallbackData = [
       {
         position: 1,
-        title: "SEO Tools - Complete Guide to Search Engine Optimization",
-        url: "https://example.com/seo-tools-guide",
-        snippet: "Comprehensive guide to the best SEO tools for keyword research, content optimization, and performance tracking.",
-        entities: ["SEO", "keyword research", "optimization"]
+        title: `Complete Guide to ${keyword} - Expert Tips & Strategies`,
+        url: 'https://example.com/guide',
+        displayUrl: 'example.com',
+        snippet: `Comprehensive guide covering everything about ${keyword}. Learn best practices, expert strategies, and proven techniques for success.`,
+        provider: 'offline'
       },
       {
         position: 2,
-        title: "Content Marketing Strategies That Drive Results",
-        url: "https://example.com/content-marketing",
-        snippet: "Learn proven content marketing strategies to attract and engage your target audience.",
-        entities: ["content marketing", "strategy", "engagement"]
+        title: `${keyword}: Best Practices for 2024`,
+        url: 'https://industry-leader.com/best-practices',
+        displayUrl: 'industry-leader.com',
+        snippet: `Discover the latest best practices for ${keyword} in 2024. Updated strategies and proven methodologies for optimal results.`,
+        provider: 'offline'
       },
       {
         position: 3,
-        title: "Keyword Research Tools - Find the Right Keywords",
-        url: "https://example.com/keyword-research",
-        snippet: "Discover powerful keyword research tools and techniques to improve your SEO performance.",
-        entities: ["keyword research", "SEO tools", "search volume"]
+        title: `Top 10 ${keyword} Tools and Resources`,
+        url: 'https://tools-review.com/top-tools',
+        displayUrl: 'tools-review.com',
+        snippet: `Comprehensive review of the best ${keyword} tools available. Compare features, pricing, and performance to find the perfect solution.`,
+        provider: 'offline'
+      },
+      {
+        position: 4,
+        title: `${keyword} for Beginners: Step-by-Step Tutorial`,
+        url: 'https://learn-hub.com/tutorial',
+        displayUrl: 'learn-hub.com',
+        snippet: `Easy-to-follow tutorial for ${keyword} beginners. Step-by-step instructions with practical examples and real-world applications.`,
+        provider: 'offline'
+      },
+      {
+        position: 5,
+        title: `Advanced ${keyword} Techniques for Professionals`,
+        url: 'https://pro-academy.com/advanced',
+        displayUrl: 'pro-academy.com',
+        snippet: `Master advanced ${keyword} techniques used by industry professionals. In-depth strategies for experienced practitioners.`,
+        provider: 'offline'
       }
     ]
+
+    return fallbackData
   },
 
-  async getByPosition(position) {
-    try {
-      const allResults = await this.getAll()
-      const result = allResults.find(item => item.position === parseInt(position))
-if (!result) {
-        throw new Error(`SERP result not found at position ${position}`);
+  formatErrorMessage(error) {
+    // Handle null/undefined
+    if (!error) return 'Unknown error occurred'
+    
+    // Handle string errors
+    if (typeof error === 'string') {
+      return error
+    }
+    
+    // Handle Error instances
+    if (error instanceof Error) {
+      // Special handling for common error types
+      if (error.name === 'AbortError') {
+        return 'Request timed out after 10 seconds'
       }
-      return result;
-} catch (error) {
-      console.error('Error getting SERP result by position:', error);
-      throw new Error(`Failed to retrieve SERP result: ${error.message}`);
+      
+      if (error.name === 'TypeError' && error.message?.includes('fetch')) {
+        return 'Network connection failed - please check your internet connection'
+      }
+      
+      return error.message || 'Network request failed'
     }
-  },
-
-processSerpResults(serpData, keyword) {
-    const results = [];
-    if (serpData.organic_results) {
-      serpData.organic_results.forEach((item, index) => {
-        results.push({
-          position: index + 1,
-          title: item.title || 'No title',
-          url: item.link || '',
-          snippet: item.snippet || 'No description available',
-          keyword: keyword,
-          searchVolume: this.estimateSearchVolume(keyword),
-          difficulty: this.calculateDifficulty(serpData.organic_results.length, index),
-          ctr: this.calculateCTR(index + 1),
-          timestamp: new Date().toISOString(),
-          source: 'serpapi',
-          metadata: {
-            richSnippet: item.rich_snippet || null,
-            sitelinks: item.sitelinks || [],
-rating: item.rating || null
+    
+    // Handle object errors (this is where the [object Object] issue occurs)
+    if (typeof error === 'object') {
+      // Try standard error properties first
+      if (error.message && typeof error.message === 'string') {
+        return error.message
+      }
+      
+      if (error.error && typeof error.error === 'string') {
+        return error.error
+      }
+      
+      if (error.status_message && typeof error.status_message === 'string') {
+        return error.status_message
+      }
+      
+      // Build error message from available properties
+      const errorParts = []
+      if (error.status) errorParts.push(`Status: ${error.status}`)
+      if (error.code) errorParts.push(`Code: ${error.code}`)
+      if (error.type) errorParts.push(`Type: ${error.type}`)
+      if (error.name) errorParts.push(`Name: ${error.name}`)
+      
+      if (errorParts.length > 0) {
+        return `API Error - ${errorParts.join(', ')}`
+      }
+      
+      // Try to safely stringify the object
+      try {
+        const jsonStr = JSON.stringify(error)
+        if (jsonStr && jsonStr !== '{}' && jsonStr !== 'null' && jsonStr !== 'undefined') {
+          // Truncate very long error messages
+          const maxLength = 200
+          if (jsonStr.length > maxLength) {
+            return `API Error: ${jsonStr.substring(0, maxLength)}...`
           }
-        });
-      });
+          return `API Error: ${jsonStr}`
+        }
+      } catch (jsonError) {
+        console.warn('Failed to stringify error object:', jsonError)
+      }
+      
+      // Fallback for objects that can't be meaningfully stringified
+      return 'SERP API returned an unspecified error'
     }
-
-    // Add related searches if available
-    if (serpData.related_searches) {
-      serpData.related_searches.forEach((related, index) => {
-        results.push({
-          position: 100 + index, // Offset for related searches
-          title: `Related: ${related.query}`,
-          url: '',
-          snippet: `Related search query for ${keyword}`,
-          keyword: related.query,
-          searchVolume: this.estimateSearchVolume(related.query),
-          difficulty: Math.floor(Math.random() * 40) + 30,
-          ctr: 0,
-          timestamp: new Date().toISOString(),
-source: 'related_search'
-        });
-      });
-    }
-
-return results;
-  },
-
-generateFallbackResults(keyword) {
-    // Generate basic results when API is unavailable
-    const results = [];
-    const competitors = [
-'wikipedia.org', 'medium.com', 'hubspot.com', 'moz.com', 'searchengineland.com'
-    ];
     
-    competitors.forEach((domain, index) => {
-      results.push({
-        position: index + 1,
-        title: `${keyword} - ${domain.split('.')[0].toUpperCase()}`,
-        url: `https://${domain}/${keyword.replace(/\s+/g, '-').toLowerCase()}`,
-        snippet: `Learn about ${keyword} with comprehensive guides and expert insights. Get the latest information and best practices.`,
-        keyword: keyword,
-        searchVolume: Math.floor(Math.random() * 10000) + 1000,
-        difficulty: Math.floor(Math.random() * 60) + 20,
-        ctr: this.calculateCTR(index + 1),
-        timestamp: new Date().toISOString(),
-source: 'fallback'
-      });
-    });
-    
-    return results;
-  },
-
-estimateSearchVolume(keyword) {
-    // Basic search volume estimation based on keyword characteristics
-    const wordCount = keyword.split(' ').length;
-    const baseVolume = Math.max(100, Math.floor(Math.random() * 50000));
-    
-// Longer keywords typically have lower volume
-    const volumeMultiplier = wordCount > 3 ? 0.3 : wordCount > 2 ? 0.6 : 1;
-    
-    return Math.floor(baseVolume * volumeMultiplier);
-  },
-
-calculateDifficulty(totalResults, position) {
-    // Calculate keyword difficulty based on competition
-    const baseScore = Math.min(90, totalResults * 2);
-    const positionFactor = position < 3 ? 1.2 : position < 10 ? 1.0 : 0.8;
-    
-    return Math.floor(baseScore * positionFactor);
-  },
-
-calculateCTR(position) {
-    // Industry standard CTR by position
-    const ctrRates = {
-      1: 31.7, 2: 24.7, 3: 18.7, 4: 13.7, 5: 9.5,
-      6: 6.1, 7: 4.4, 8: 3.1, 9: 2.5, 10: 2.2
-    };
-    
-    return ctrRates[position] || Math.max(0.5, 2.5 - (position * 0.1));
-  },
-
-async create(serpResult) {
-    // For adding custom SERP analysis results
-    const newResult = {
-      position: Date.now(), // Use timestamp as unique identifier
-      ...serpResult,
-      timestamp: new Date().toISOString(),
-      source: 'custom'
-    };
-    
-    return { ...newResult };
-  },
-
-async update(position, updates) {
-    // Update existing SERP result
-    return {
-      position: parseInt(position),
-      ...updates,
-      lastUpdated: new Date().toISOString()
-    };
-  },
-
-async delete(position) {
-    // Mark result as deleted
-    return {
-      position: parseInt(position),
-      deleted: true,
-      deletedAt: new Date().toISOString()
-    };
+    // Final fallback
+    return 'SERP API service temporarily unavailable'
   }
-};
+}
 
-export default serpService;
+export default serpService

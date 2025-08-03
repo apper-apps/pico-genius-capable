@@ -91,44 +91,71 @@ setCurrentContent(newContent)
         message: err?.message || 'Unknown error',
         name: err?.name || 'Error',
         stack: err?.stack || 'No stack trace',
+        isApiError: err?.isApiError || false,
+        originalError: err?.originalError,
         keyword,
         contentType
       });
       
-      // Safely extract error message with multiple fallbacks
-let errorMsg = 'Unknown error occurred during content generation';
+      // Extract error message using improved logic
+      let errorMsg = 'Unknown error occurred during content generation';
+      
+      // Handle string errors
       if (typeof err === 'string') {
         errorMsg = err;
-      } else if (err?.message && typeof err.message === 'string') {
-        errorMsg = err.message;
-      } else if (err?.error && typeof err.error === 'string') {
-        errorMsg = err.error;
-      } else if (err?.toString && typeof err.toString === 'function') {
-        const stringified = err.toString();
-        if (stringified !== '[object Object]') {
-          errorMsg = stringified;
-        } else {
-          // Enhanced fallback for objects that stringify to "[object Object]"
-          try {
-            const jsonString = JSON.stringify(err);
-            if (jsonString && jsonString !== '{}') {
-              errorMsg = `Content generation error: ${jsonString}`;
-            } else if (err?.name || err?.code || err?.status) {
-              errorMsg = `Content generation error: ${err.name || 'Unknown'} ${err.code || err.status || ''}`.trim();
-            }
-          } catch (jsonError) {
-            errorMsg = 'Content generation encountered an unexpected error format';
-          }
+      } 
+      // Handle Error objects and API errors
+      else if (err && typeof err === 'object') {
+        // Check for message property first
+        if (err.message && typeof err.message === 'string') {
+          errorMsg = err.message;
         }
-      } else if (err && typeof err === 'object') {
-        // Direct object handling as final fallback
-        try {
-          const jsonString = JSON.stringify(err);
-          if (jsonString && jsonString !== '{}') {
-            errorMsg = `Content generation error: ${jsonString}`;
+        // Check for error property
+        else if (err.error && typeof err.error === 'string') {
+          errorMsg = err.error;
+        }
+        // Handle specific API error properties
+        else if (err.status_message && typeof err.status_message === 'string') {
+          errorMsg = err.status_message;
+        }
+        // Try toString() method
+        else if (err.toString && typeof err.toString === 'function') {
+          const stringified = err.toString();
+          if (stringified && stringified !== '[object Object]' && stringified !== 'Error') {
+            errorMsg = stringified;
+          } else {
+            // Enhanced object property extraction
+            const errorParts = [];
+            if (err.name) errorParts.push(err.name);
+            if (err.code) errorParts.push(`Code: ${err.code}`);
+            if (err.status) errorParts.push(`Status: ${err.status}`);
+            if (err.type) errorParts.push(`Type: ${err.type}`);
+            
+            if (errorParts.length > 0) {
+              errorMsg = `Content generation error: ${errorParts.join(', ')}`;
+            } else {
+              // Last resort - safe JSON stringify with error handling
+              try {
+                const jsonString = JSON.stringify(err, null, 0);
+                if (jsonString && jsonString !== '{}' && jsonString !== 'null') {
+                  // Truncate very long error messages
+                  const maxLength = 150;
+                  if (jsonString.length > maxLength) {
+                    errorMsg = `Content generation error: ${jsonString.substring(0, maxLength)}...`;
+                  } else {
+                    errorMsg = `Content generation error: ${jsonString}`;
+                  }
+                } else {
+                  errorMsg = 'Content generation encountered an unspecified error';
+                }
+              } catch (jsonError) {
+                console.warn('Failed to stringify error object:', jsonError);
+                errorMsg = 'Content generation encountered a complex error that could not be processed';
+              }
+            }
           }
-        } catch (jsonError) {
-          errorMsg = 'Content generation encountered a complex error object';
+        } else {
+          errorMsg = 'Content generation encountered an unexpected error format';
         }
       }
       
